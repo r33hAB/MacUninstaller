@@ -1,0 +1,83 @@
+name: MacUninstaller
+options:
+  bundleIdPrefix: io.darevader
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+
+targets:
+  MacUninstaller:
+    type: application
+    platform: macOS
+    sources:
+      - path: MacUninstaller
+        excludes:
+          - "**/.gitkeep"
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.darevader.MacUninstaller
+        INFOPLIST_FILE: MacUninstaller/Info.plist
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+        GENERATE_INFOPLIST_FILE: false
+    scheme:
+      testTargets:
+        - MacUninstallerTests
+
+  HelperTool:
+    type: tool
+    platform: macOS
+    sources:
+      - path: HelperTool
+        excludes:
+          - "**/*.plist"
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.darevader.MacUninstaller.HelperTool
+        INFOPLIST_FILE: HelperTool/Info.plist
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+        GENERATE_INFOPLIST_FILE: false
+
+  FinderExtension:
+    type: app-extension
+    product: com.apple.product-type.finder-sync-extension
+    platform: macOS
+    sources:
+      - path: FinderExtension
+        excludes:
+          - "**/*.plist"
+          - "**/.gitkeep"
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.darevader.MacUninstaller.FinderExtension
+        INFOPLIST_FILE: FinderExtension/Info.plist
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+        GENERATE_INFOPLIST_FILE: false
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/../Frameworks"
+          - "@executable_path/../../../../Frameworks"
+    dependencies:
+      - target: MacUninstaller
+        embed: false
+
+  MacUninstallerTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: MacUninstallerTests
+        excludes:
+          - "**/.gitkeep"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.darevader.MacUninstaller.Tests
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+    dependencies:
+      - target: MacUninstaller
