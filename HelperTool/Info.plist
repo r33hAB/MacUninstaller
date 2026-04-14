@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>io.darevader.MacUninstaller.HelperTool</string>
+    <string>com.r33hab.macuninstall.HelperTool</string>
     <key>CFBundleName</key>
     <string>HelperTool</string>
     <key>CFBundlePackageType</key>

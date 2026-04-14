@@ -1,9 +1,18 @@
 import Foundation
 
 enum AppConstants {
-    static let appBundleID = "io.darevader.MacUninstaller"
-    static let helperBundleID = "io.darevader.MacUninstaller.HelperTool"
-    static let extensionBundleID = "io.darevader.MacUninstaller.FinderExtension"
+    static let appBundleID = "com.r33hab.macuninstall"
+    static let helperBundleID = "com.r33hab.macuninstall.HelperTool"
+    static let extensionBundleID = "com.r33hab.macuninstall.FinderExtension"
+
+    /// Apps known to have large container data (VMs, images, etc.)
+    /// that shouldn't alarm users with their total size
+    static let containerHeavyApps: Set<String> = [
+        "com.docker.docker",
+        "com.parallels.desktop.console",
+        "com.vmware.fusion",
+        "com.utmapp.UTM",
+    ]
     static let urlScheme = "macuninstaller"
 
     static let blockedPaths: Set<String> = [

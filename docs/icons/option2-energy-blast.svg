@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F0F1A"/>
+      <stop offset="100%" stop-color="#0A0A0A"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="60%" stop-color="#EF4444"/>
+      <stop offset="100%" stop-color="#EF4444" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="beamCore" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="100%" stop-color="#F97316" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="mac2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E5E7EB"/>
+      <stop offset="100%" stop-color="#9CA3AF"/>
+    </linearGradient>
+    <linearGradient id="screen2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E3A5F"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <radialGradient id="explosion" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="30%" stop-color="#F97316"/>
+      <stop offset="70%" stop-color="#EF4444" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#EF4444" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow2">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow2Strong">
+      <feGaussianBlur stdDeviation="20" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <clipPath id="roundedRect2">
+      <rect x="0" y="0" width="1024" height="1024" rx="228" ry="228"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#roundedRect2)">
+    <rect width="1024" height="1024" fill="url(#bg2)"/>
+
+    <!-- Background energy ring -->
+    <circle cx="512" cy="440" r="300" fill="none" stroke="#F97316" stroke-width="1" opacity="0.1"/>
+    <circle cx="512" cy="440" r="250" fill="none" stroke="#F97316" stroke-width="0.5" opacity="0.08"/>
+
+    <!-- MacBook - left side, angled to shoot beam -->
+    <g transform="translate(100, 280) rotate(-5, 180, 130)">
+      <!-- Base -->
+      <path d="M 60,200 L 310,200 L 330,245 L 40,245 Z" fill="url(#mac2)" opacity="0.95"/>
+      <!-- Hinge -->
+      <rect x="75" y="192" width="220" height="9" rx="3" fill="#9CA3AF"/>
+      <!-- Screen housing -->
+      <rect x="65" y="25" width="240" height="170" rx="12" fill="url(#mac2)"/>
+      <!-- Screen -->
+      <rect x="78" y="36" width="214" height="148" rx="8" fill="url(#screen2)"/>
+      <!-- Screen glow from beam -->
+      <rect x="78" y="36" width="214" height="148" rx="8" fill="#F97316" opacity="0.15"/>
+      <!-- Apple logo on screen (simple) -->
+      <circle cx="185" cy="100" r="4" fill="#F97316" opacity="0.6"/>
+      <!-- Beam origin glow on screen edge -->
+      <circle cx="292" cy="110" r="30" fill="#F97316" opacity="0.3"/>
+      <circle cx="292" cy="110" r="15" fill="#FCD34D" opacity="0.4"/>
+    </g>
+
+    <!-- ENERGY BEAM -->
+    <g filter="url(#glow2Strong)">
+      <!-- Outer beam -->
+      <polygon points="380,375 760,340 760,420 380,405" fill="url(#beam)" opacity="0.6"/>
+      <!-- Inner beam -->
+      <polygon points="380,385 740,360 740,400 380,395" fill="url(#beamCore)" opacity="0.8"/>
+      <!-- Core beam -->
+      <polygon points="385,388 720,370 720,390 385,392" fill="#FCD34D" opacity="0.6"/>
+    </g>
+
+    <!-- Beam particles -->
+    <g filter="url(#glow2)" opacity="0.7">
+      <circle cx="450" cy="385" r="3" fill="#FCD34D"/>
+      <circle cx="520" cy="378" r="2" fill="#F97316"/>
+      <circle cx="580" cy="395" r="2.5" fill="#FCD34D"/>
+      <circle cx="640" cy="372" r="2" fill="#F97316"/>
+      <circle cx="500" cy="400" r="1.5" fill="#FCD34D"/>
+      <circle cx="600" cy="365" r="3" fill="#FCD34D"/>
+    </g>
+
+    <!-- Trash Can - being disintegrated -->
+    <g transform="translate(700, 280)">
+      <!-- Explosion behind trash -->
+      <circle cx="60" cy="100" r="90" fill="url(#explosion)" filter="url(#glow2Strong)"/>
+
+      <!-- Trash body - partially disintegrated -->
+      <g opacity="0.85">
+        <path d="M 30,50 L 38,180 Q 42,195 60,195 Q 80,195 90,195 L 100,50 Z" fill="#4B5563" stroke="#6B7280" stroke-width="1.5"/>
+        <!-- Disintegration on left side -->
+        <path d="M 30,50 L 35,100" stroke="#4B5563" stroke-width="3" stroke-dasharray="4,6"/>
+        <!-- Lid -->
+        <rect x="22" y="38" width="88" height="14" rx="4" fill="#6B7280"/>
+        <rect x="48" y="28" width="36" height="12" rx="6" fill="#6B7280"/>
+        <!-- Ribs -->
+        <line x1="38" y1="80" x2="95" y2="80" stroke="#6B7280" stroke-width="1" opacity="0.4"/>
+        <line x1="39" y1="110" x2="94" y2="110" stroke="#6B7280" stroke-width="1" opacity="0.4"/>
+        <line x1="40" y1="140" x2="93" y2="140" stroke="#6B7280" stroke-width="1" opacity="0.4"/>
+      </g>
+
+      <!-- Disintegrating pixels flying off -->
+      <g filter="url(#glow2)">
+        <rect x="100" y="60" width="6" height="6" fill="#6B7280" opacity="0.7" transform="rotate(30, 103, 63)"/>
+        <rect x="115" y="45" width="5" height="5" fill="#9CA3AF" opacity="0.6" transform="rotate(45, 117, 47)"/>
+        <rect x="108" y="90" width="4" height="4" fill="#6B7280" opacity="0.5" transform="rotate(20, 110, 92)"/>
+        <rect x="120" y="75" width="7" height="7" fill="#4B5563" opacity="0.7" transform="rotate(55, 123, 78)"/>
+        <rect x="95" y="120" width="5" height="5" fill="#9CA3AF" opacity="0.4" transform="rotate(40, 97, 122)"/>
+        <rect x="130" y="55" width="4" height="4" fill="#6B7280" opacity="0.3" transform="rotate(60, 132, 57)"/>
+        <rect x="110" y="140" width="5" height="5" fill="#4B5563" opacity="0.5" transform="rotate(15, 112, 142)"/>
+        <rect x="140" y="90" width="3" height="3" fill="#9CA3AF" opacity="0.3" transform="rotate(70, 141, 91)"/>
+      </g>
+    </g>
+
+    <!-- Floating energy particles around scene -->
+    <g filter="url(#glow2)" opacity="0.5">
+      <circle cx="200" cy="200" r="2" fill="#F97316"/>
+      <circle cx="800" cy="250" r="3" fill="#EF4444"/>
+      <circle cx="150" cy="500" r="2" fill="#F97316"/>
+      <circle cx="850" cy="500" r="2" fill="#F97316"/>
+      <circle cx="300" cy="600" r="1.5" fill="#FCD34D"/>
+      <circle cx="700" cy="600" r="2" fill="#EF4444"/>
+    </g>
+
+    <!-- Bottom branding -->
+    <text x="512" y="720" text-anchor="middle" font-family="-apple-system, SF Pro Display, Helvetica Neue" font-size="48" font-weight="700" fill="#EEEEEE" letter-spacing="4">MacUninstaller</text>
+    <rect x="320" y="740" width="384" height="1" fill="#F97316" opacity="0.3"/>
+    <text x="512" y="775" text-anchor="middle" font-family="-apple-system, SF Pro Display, Helvetica Neue" font-size="20" font-weight="500" fill="#F97316" letter-spacing="6" opacity="0.8">ELIMINATE</text>
+  </g>
+</svg>

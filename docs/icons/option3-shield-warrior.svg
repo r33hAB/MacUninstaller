@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#121218"/>
+      <stop offset="100%" stop-color="#0A0A0A"/>
+    </linearGradient>
+    <linearGradient id="orangeRed" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="100%" stop-color="#EF4444"/>
+    </linearGradient>
+    <linearGradient id="orangeRedH" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="100%" stop-color="#EF4444"/>
+    </linearGradient>
+    <linearGradient id="swordBlade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="40%" stop-color="#F97316"/>
+      <stop offset="100%" stop-color="#EF4444"/>
+    </linearGradient>
+    <linearGradient id="mac3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F3F4F6"/>
+      <stop offset="100%" stop-color="#D1D5DB"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#667EEA"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <filter id="glow3">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow3Big">
+      <feGaussianBlur stdDeviation="18" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow3">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <clipPath id="roundedRect3">
+      <rect x="0" y="0" width="1024" height="1024" rx="228" ry="228"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#roundedRect3)">
+    <rect width="1024" height="1024" fill="url(#bg3)"/>
+
+    <!-- Dramatic background glow -->
+    <ellipse cx="512" cy="420" rx="400" ry="300" fill="#F97316" opacity="0.04"/>
+
+    <!-- MacBook as warrior - center stage -->
+    <g transform="translate(280, 220)" filter="url(#shadow3)">
+      <!-- Base/keyboard -->
+      <path d="M 80,230 L 380,230 L 400,275 L 60,275 Z" fill="url(#mac3)" opacity="0.95"/>
+      <!-- Hinge -->
+      <rect x="95" y="222" width="270" height="9" rx="3" fill="#9CA3AF"/>
+      <!-- Screen housing -->
+      <rect x="85" y="30" width="290" height="195" rx="14" fill="url(#mac3)"/>
+      <!-- Screen -->
+      <rect x="100" y="42" width="260" height="170" rx="8" fill="#111827"/>
+
+      <!-- Warrior face on screen -->
+      <!-- Eyes - determined -->
+      <rect x="170" y="100" width="22" height="10" rx="2" fill="url(#orangeRed)"/>
+      <rect x="268" y="100" width="22" height="10" rx="2" fill="url(#orangeRed)"/>
+      <!-- Angry eyebrows -->
+      <line x1="165" y1="90" x2="195" y2="96" stroke="url(#orangeRed)" stroke-width="4" stroke-linecap="round"/>
+      <line x1="295" y1="90" x2="265" y2="96" stroke="url(#orangeRed)" stroke-width="4" stroke-linecap="round"/>
+      <!-- Determined mouth -->
+      <line x1="200" y1="140" x2="260" y2="140" stroke="url(#orangeRed)" stroke-width="4" stroke-linecap="round"/>
+    </g>
+
+    <!-- SWORD - right side, held diagonally -->
+    <g transform="translate(580, 120) rotate(35, 50, 200)" filter="url(#glow3Big)">
+      <!-- Blade -->
+      <polygon points="50,0 60,10 55,200 50,210 45,200 40,10" fill="url(#swordBlade)"/>
+      <!-- Blade edge glow -->
+      <polygon points="50,5 55,10 52,180 50,190 48,180 45,10" fill="#FCD34D" opacity="0.4"/>
+      <!-- Cross guard -->
+      <rect x="20" y="200" width="60" height="12" rx="3" fill="#9CA3AF"/>
+      <rect x="20" y="200" width="60" height="12" rx="3" fill="url(#orangeRedH)" opacity="0.5"/>
+      <!-- Handle -->
+      <rect x="42" y="212" width="16" height="50" rx="4" fill="#6B7280"/>
+      <!-- Pommel -->
+      <circle cx="50" cy="268" r="10" fill="url(#orangeRed)"/>
+    </g>
+
+    <!-- SHIELD - left side -->
+    <g transform="translate(130, 320) rotate(-10)" filter="url(#shadow3)">
+      <!-- Shield shape -->
+      <path d="M 70,0 L 140,20 L 140,100 Q 140,160 70,190 Q 0,160 0,100 L 0,20 Z" fill="url(#shieldGrad)" opacity="0.9"/>
+      <!-- Shield border -->
+      <path d="M 70,0 L 140,20 L 140,100 Q 140,160 70,190 Q 0,160 0,100 L 0,20 Z" fill="none" stroke="#818CF8" stroke-width="3"/>
+      <!-- Shield emblem - X for uninstall -->
+      <g transform="translate(70, 90)">
+        <line x1="-25" y1="-25" x2="25" y2="25" stroke="#E0E7FF" stroke-width="6" stroke-linecap="round"/>
+        <line x1="25" y1="-25" x2="-25" y2="25" stroke="#E0E7FF" stroke-width="6" stroke-linecap="round"/>
+      </g>
+    </g>
+
+    <!-- Defeated trash cans scattered -->
+    <!-- Trash 1 - knocked over right -->
+    <g transform="translate(680, 520) rotate(70)" opacity="0.6">
+      <path d="M 15,20 L 18,70 Q 20,78 30,78 Q 40,78 45,78 L 48,20 Z" fill="#4B5563"/>
+      <rect x="10" y="14" width="44" height="8" rx="3" fill="#6B7280"/>
+      <rect x="24" y="8" width="16" height="8" rx="4" fill="#6B7280"/>
+    </g>
+
+    <!-- Trash 2 - smashed on left -->
+    <g transform="translate(180, 580) rotate(-45)" opacity="0.5">
+      <path d="M 12,18 L 15,60 Q 16,66 24,66 Q 32,66 36,66 L 39,18 Z" fill="#374151"/>
+      <rect x="8" y="12" width="35" height="7" rx="3" fill="#6B7280"/>
+    </g>
+
+    <!-- Trash 3 - flying through air top right -->
+    <g transform="translate(780, 200) rotate(120)" opacity="0.4">
+      <path d="M 10,15 L 12,50 Q 14,55 20,55 Q 26,55 30,55 L 32,15 Z" fill="#374151"/>
+      <rect x="6" y="10" width="30" height="6" rx="2" fill="#6B7280"/>
+    </g>
+
+    <!-- Slash marks in the air -->
+    <g stroke="url(#orangeRed)" stroke-width="3" opacity="0.4" stroke-linecap="round" filter="url(#glow3)">
+      <path d="M 620,250 Q 650,280 680,260" fill="none"/>
+      <path d="M 640,300 Q 670,330 710,310" fill="none"/>
+      <path d="M 600,350 Q 630,380 660,360" fill="none"/>
+    </g>
+
+    <!-- Sparkle particles -->
+    <g filter="url(#glow3)">
+      <circle cx="650" cy="180" r="3" fill="#FCD34D" opacity="0.6"/>
+      <circle cx="750" cy="300" r="2" fill="#F97316" opacity="0.5"/>
+      <circle cx="820" cy="420" r="2.5" fill="#EF4444" opacity="0.4"/>
+      <circle cx="690" cy="450" r="2" fill="#FCD34D" opacity="0.5"/>
+      <circle cx="160" cy="250" r="2" fill="#667EEA" opacity="0.4"/>
+      <circle cx="140" cy="480" r="2" fill="#667EEA" opacity="0.3"/>
+    </g>
+
+    <!-- Bottom branding -->
+    <text x="512" y="740" text-anchor="middle" font-family="-apple-system, SF Pro Display, Helvetica Neue" font-size="48" font-weight="800" fill="#EEEEEE" letter-spacing="3">MacUninstaller</text>
+    <text x="512" y="780" text-anchor="middle" font-family="-apple-system, SF Pro Display, Helvetica Neue" font-size="18" font-weight="500" fill="#888888" letter-spacing="8">DEFEND YOUR STORAGE</text>
+  </g>
+</svg>

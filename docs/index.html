@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacUninstaller — Clean Your Mac</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #060608;
+            --bg2: #0d0d12;
+            --card: #13131a;
+            --border: #1e1e2a;
+            --text: #eeeef0;
+            --text2: #8888a0;
+            --text3: #55556a;
+            --orange: #f97316;
+            --red: #ef4444;
+            --blue: #667eea;
+            --purple: #8b5cf6;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* NAV */
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            padding: 14px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(6,6,8,0.8); backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(30,30,42,0.5);
+        }
+        .nav-brand { display: flex; align-items: center; gap: 10px; }
+        .nav-logo {
+            width: 30px; height: 30px; border-radius: 8px;
+            background: linear-gradient(135deg, var(--orange), var(--red));
+            display: flex; align-items: center; justify-content: center; font-size: 15px;
+        }
+        .nav-title { font-size: 15px; font-weight: 700; }
+        .nav-right { display: flex; gap: 24px; align-items: center; }
+        .nav-right a { color: var(--text2); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+        .nav-right a:hover { color: var(--text); }
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 600;
+            text-decoration: none; transition: all 0.3s; cursor: pointer; border: none;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--orange), var(--red)); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(249,115,22,0.3); }
+        .btn-ghost { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+            padding: 120px 40px 60px; position: relative;
+        }
+        .hero-glow {
+            position: absolute; top: 30%; left: 50%; transform: translate(-50%,-50%);
+            width: 700px; height: 500px;
+            background: radial-gradient(ellipse, rgba(249,115,22,0.12) 0%, rgba(239,68,68,0.05) 40%, transparent 70%);
+            pointer-events: none; filter: blur(40px);
+        }
+        .hero-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 500;
+            background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.2);
+            color: var(--orange); margin-bottom: 28px;
+        }
+        .hero h1 { font-size: 72px; font-weight: 800; line-height: 1.05; letter-spacing: -3px; margin-bottom: 24px; }
+        .hero h1 .grad {
+            background: linear-gradient(135deg, var(--orange), var(--red), var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-size: 200% 200%; animation: gradShift 4s ease infinite;
+        }
+        @keyframes gradShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+        .hero p { font-size: 19px; color: var(--text2); max-width: 540px; line-height: 1.6; margin-bottom: 40px; }
+        .hero-btns { display: flex; gap: 12px; margin-bottom: 16px; }
+        .hero-meta { font-size: 12px; color: var(--text3); }
+
+        /* BATTLE SCENE */
+        .battle {
+            padding: 80px 40px; position: relative; overflow: hidden;
+        }
+        .battle-inner {
+            max-width: 900px; margin: 0 auto; position: relative; height: 400px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .laptop {
+            position: relative; z-index: 2;
+            width: 280px; height: 180px;
+            background: linear-gradient(135deg, #2a2a3a, #1a1a2a);
+            border-radius: 12px; border: 2px solid #3a3a4a;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .laptop.fighting { animation: laptopPunch 0.6s ease; }
+        @keyframes laptopPunch {
+            0% { transform: translateX(0) rotate(0); }
+            30% { transform: translateX(40px) rotate(3deg); }
+            60% { transform: translateX(-5px) rotate(-1deg); }
+            100% { transform: translateX(0) rotate(0); }
+        }
+        .laptop-screen {
+            width: 240px; height: 140px; border-radius: 6px; overflow: hidden;
+            background: var(--bg); display: flex; flex-direction: column;
+        }
+        .laptop-bar {
+            height: 12px; display: flex; gap: 1px; padding: 3px 6px; background: #111;
+        }
+        .laptop-bar span { width: 6px; height: 6px; border-radius: 50%; }
+        .laptop-content { flex: 1; padding: 6px; display: flex; flex-direction: column; gap: 3px; }
+        .laptop-row {
+            height: 10px; border-radius: 3px; background: var(--card);
+            display: flex; align-items: center; gap: 4px; padding: 0 4px;
+        }
+        .laptop-row .dot { width: 4px; height: 4px; border-radius: 50%; }
+        .laptop-base {
+            width: 320px; height: 8px; margin: -2px auto 0;
+            background: linear-gradient(to bottom, #3a3a4a, #2a2a3a);
+            border-radius: 0 0 4px 4px;
+        }
+
+        .trash-pile {
+            position: absolute; right: 80px; z-index: 1;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            transition: all 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .trash-pile.hit { transform: translateX(60px) rotate(15deg) scale(0.9); opacity: 0.6; }
+        .trash-item {
+            padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600;
+            background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+            color: var(--red); white-space: nowrap;
+            animation: trashFloat 3s ease-in-out infinite;
+        }
+        .trash-item:nth-child(2) { animation-delay: 0.5s; transform: translateX(20px); }
+        .trash-item:nth-child(3) { animation-delay: 1s; transform: translateX(-10px); }
+        .trash-item:nth-child(4) { animation-delay: 1.5s; transform: translateX(30px); }
+        .trash-item:nth-child(5) { animation-delay: 2s; transform: translateX(5px); }
+        @keyframes trashFloat {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .energy-beam {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+            width: 0; height: 4px; border-radius: 2px;
+            background: linear-gradient(90deg, var(--orange), var(--red), transparent);
+            z-index: 3; opacity: 0;
+            transition: width 0.3s, opacity 0.2s;
+        }
+        .energy-beam.active { width: 200px; opacity: 1; }
+
+        .particles {
+            position: absolute; inset: 0; pointer-events: none; z-index: 4;
+        }
+        .particle {
+            position: absolute; width: 4px; height: 4px; border-radius: 50%;
+            background: var(--orange); opacity: 0;
+        }
+
+        .battle-text {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            font-size: 13px; color: var(--text3); text-align: center;
+        }
+
+        /* FEATURES */
+        .features { padding: 100px 40px; max-width: 1100px; margin: 0 auto; }
+        .section-header { text-align: center; margin-bottom: 60px; }
+        .section-header h2 { font-size: 44px; font-weight: 800; letter-spacing: -2px; margin-bottom: 12px; }
+        .section-header p { color: var(--text2); font-size: 17px; }
+
+        .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+        .f-card {
+            padding: 32px; background: var(--card); border-radius: 16px;
+            border: 1px solid var(--border); transition: all 0.4s;
+            position: relative; overflow: hidden;
+        }
+        .f-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--orange), transparent);
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .f-card:hover { border-color: rgba(249,115,22,0.3); transform: translateY(-4px); }
+        .f-card:hover::before { opacity: 1; }
+        .f-icon {
+            width: 44px; height: 44px; border-radius: 12px; margin-bottom: 18px;
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
+        }
+        .f-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+        .f-card p { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+        /* STATS */
+        .stats {
+            padding: 60px 40px;
+            display: flex; justify-content: center; gap: 80px;
+        }
+        .stat { text-align: center; }
+        .stat-num {
+            font-size: 48px; font-weight: 800;
+            background: linear-gradient(135deg, var(--orange), var(--red));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .stat-label { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+        /* CTA */
+        .cta {
+            padding: 120px 40px; text-align: center;
+            position: relative;
+        }
+        .cta-glow {
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 600px; height: 300px;
+            background: radial-gradient(ellipse, rgba(249,115,22,0.08), transparent 70%);
+            pointer-events: none;
+        }
+        .cta h2 { font-size: 52px; font-weight: 800; letter-spacing: -2px; margin-bottom: 16px; }
+        .cta p { color: var(--text2); font-size: 17px; margin-bottom: 36px; }
+        .cta-meta { font-size: 12px; color: var(--text3); margin-top: 16px; }
+
+        /* FOOTER */
+        footer {
+            padding: 28px 40px; border-top: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        footer p, footer a { font-size: 12px; color: var(--text3); text-decoration: none; }
+        footer a:hover { color: var(--text2); }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 38px; letter-spacing: -1px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .stats { flex-direction: column; gap: 32px; }
+            .hero-btns { flex-direction: column; align-items: center; }
+            .battle-inner { height: 300px; }
+            .laptop { width: 200px; height: 130px; }
+            .trash-pile { right: 20px; }
+            nav { padding: 12px 20px; }
+            .nav-right a:not(.btn) { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-brand">
+        <div class="nav-logo">&#9889;</div>
+        <span class="nav-title">MacUninstaller</span>
+    </div>
+    <div class="nav-right">
+        <a href="#features">Features</a>
+        <a href="https://github.com/r33hAB/MacUninstaller">GitHub</a>
+        <a href="https://github.com/r33hAB/MacUninstaller/releases/latest" class="btn btn-primary">Download</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-tag">&#9889; Free &amp; Open Source</div>
+    <h1>Clean your Mac.<br><span class="grad">Destroy the junk.</span></h1>
+    <p>Uninstall apps completely, analyze storage, and reclaim disk space with intelligent cleanup. Native. Fast. No subscriptions.</p>
+    <div class="hero-btns">
+        <a href="https://github.com/r33hAB/MacUninstaller/releases/latest" class="btn btn-primary">&#8595; Download for macOS</a>
+        <a href="https://github.com/r33hAB/MacUninstaller" class="btn btn-ghost">View Source</a>
+    </div>
+    <p class="hero-meta">macOS 14.0+ &bull; Universal Binary</p>
+</section>
+
+<section class="battle reveal">
+    <div class="battle-inner">
+        <div class="laptop" id="laptop">
+            <div class="laptop-screen">
+                <div class="laptop-bar">
+                    <span style="background:#ff5f57"></span>
+                    <span style="background:#febc2e"></span>
+                    <span style="background:#28c840"></span>
+                </div>
+                <div class="laptop-content">
+                    <div class="laptop-row"><div class="dot" style="background:var(--orange)"></div></div>
+                    <div class="laptop-row"><div class="dot" style="background:var(--blue)"></div></div>
+                    <div class="laptop-row"><div class="dot" style="background:var(--purple)"></div></div>
+                    <div class="laptop-row"><div class="dot" style="background:#22c55e"></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="laptop-base"></div>
+
+        <div class="energy-beam" id="beam"></div>
+
+        <div class="trash-pile" id="trash">
+            <div class="trash-item">Old DMGs &mdash; 4.2 GB</div>
+            <div class="trash-item">node_modules &mdash; 16 GB</div>
+            <div class="trash-item">Stale caches &mdash; 8.1 GB</div>
+            <div class="trash-item">Duplicate files &mdash; 3.4 GB</div>
+            <div class="trash-item">Broken apps &mdash; 2.8 GB</div>
+        </div>
+
+        <div class="particles" id="particles"></div>
+        <div class="battle-text">Scroll to watch your Mac fight back &#8595;</div>
+    </div>
+</section>
+
+<div class="stats reveal">
+    <div class="stat"><div class="stat-num" id="statGb">0</div><div class="stat-label">GB reclaimable on average</div></div>
+    <div class="stat"><div class="stat-num" id="statFiles">0</div><div class="stat-label">junk files detected</div></div>
+    <div class="stat"><div class="stat-num">100%</div><div class="stat-label">free &amp; open source</div></div>
+</div>
+
+<section class="features reveal" id="features">
+    <div class="section-header">
+        <h2>Built different.</h2>
+        <p>Not another Electron wrapper. Pure native macOS, built with SwiftUI.</p>
+    </div>
+    <div class="features-grid">
+        <div class="f-card reveal">
+            <div class="f-icon" style="background:rgba(249,115,22,0.12)">&#128465;</div>
+            <h3>Deep Uninstall</h3>
+            <p>Removes apps and every trace they left — caches, preferences, support files, launch agents. Nothing survives.</p>
+        </div>
+        <div class="f-card reveal">
+            <div class="f-icon" style="background:rgba(102,126,234,0.12)">&#128202;</div>
+            <h3>Storage Map</h3>
+            <p>Visual disk breakdown by category. See where your space went. Browse by folder, type, or age.</p>
+        </div>
+        <div class="f-card reveal">
+            <div class="f-icon" style="background:rgba(139,92,246,0.12)">&#10024;</div>
+            <h3>Smart Suggestions</h3>
+            <p>Detects old installers, duplicates, stale downloads, bloated caches, and dev artifacts. One-click cleanup.</p>
+        </div>
+        <div class="f-card reveal">
+            <div class="f-icon" style="background:rgba(34,197,94,0.12)">&#128274;</div>
+            <h3>Touch ID Auth</h3>
+            <p>Authenticate once per session. Cached authorization for admin operations. No repeated password prompts.</p>
+        </div>
+        <div class="f-card reveal">
+            <div class="f-icon" style="background:rgba(236,72,153,0.12)">&#128736;</div>
+            <h3>Dev-Aware</h3>
+            <p>Finds node_modules, DerivedData, Pods, venv, .build across all your projects. Safely reclaimable.</p>
+        </div>
+        <div class="f-card reveal">
+            <div class="f-icon" style="background:rgba(59,130,246,0.12)">&#128270;</div>
+            <h3>Finder Menu</h3>
+            <p>Right-click any .app in Finder &rarr; "Uninstall with MacUninstaller". Instant access from anywhere.</p>
+        </div>
+    </div>
+</section>
+
+<section class="cta reveal">
+    <div class="cta-glow"></div>
+    <h2>Your Mac deserves better.</h2>
+    <p>Free. Open source. No telemetry. No subscriptions. Just a clean machine.</p>
+    <a href="https://github.com/r33hAB/MacUninstaller/releases/latest" class="btn btn-primary">&#8595; Download MacUninstaller</a>
+    <p class="cta-meta">v1.0 &bull; macOS 14.0+ &bull; ~5 MB</p>
+</section>
+
+<footer>
+    <p>&copy; 2026 r33hab</p>
+    <a href="https://github.com/r33hAB/MacUninstaller">GitHub</a>
+</footer>
+
+<script>
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.15 });
+reveals.forEach(el => observer.observe(el));
+
+// Battle animation on scroll
+const battle = document.querySelector('.battle');
+const laptop = document.getElementById('laptop');
+const beam = document.getElementById('beam');
+const trash = document.getElementById('trash');
+let lastFire = 0;
+
+function createParticle(x, y) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    p.style.background = Math.random() > 0.5 ? '#f97316' : '#ef4444';
+    document.getElementById('particles').appendChild(p);
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 30 + Math.random() * 60;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    p.animate([
+        { opacity: 1, transform: 'translate(0,0) scale(1)' },
+        { opacity: 0, transform: `translate(${dx}px,${dy}px) scale(0)` }
+    ], { duration: 600, easing: 'ease-out' });
+    setTimeout(() => p.remove(), 600);
+}
+
+window.addEventListener('scroll', () => {
+    const now = Date.now();
+    if (now - lastFire < 800) return;
+    const rect = battle.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+        lastFire = now;
+        laptop.classList.add('fighting');
+        beam.classList.add('active');
+        setTimeout(() => {
+            trash.classList.add('hit');
+            const trashRect = trash.getBoundingClientRect();
+            for (let i = 0; i < 8; i++) {
+                createParticle(
+                    trashRect.left - battle.getBoundingClientRect().left + Math.random() * 100,
+                    trashRect.top - battle.getBoundingClientRect().top + Math.random() * 80
+                );
+            }
+        }, 300);
+        setTimeout(() => {
+            laptop.classList.remove('fighting');
+            beam.classList.remove('active');
+            trash.classList.remove('hit');
+        }, 800);
+    }
+});
+
+// Counter animation
+function animateCounter(el, target, suffix = '') {
+    let current = 0;
+    const step = target / 40;
+    const timer = setInterval(() => {
+        current += step;
+        if (current >= target) { current = target; clearInterval(timer); }
+        el.textContent = Math.floor(current) + suffix;
+    }, 30);
+}
+
+const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            animateCounter(document.getElementById('statGb'), 34, '+');
+            animateCounter(document.getElementById('statFiles'), 2847, '+');
+            statsObserver.disconnect();
+        }
+    });
+}, { threshold: 0.5 });
+statsObserver.observe(document.querySelector('.stats'));
+</script>
+</body>
+</html>

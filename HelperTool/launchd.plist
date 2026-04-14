@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>io.darevader.MacUninstaller.HelperTool</string>
+    <string>com.r33hab.macuninstall.HelperTool</string>
     <key>MachServices</key>
     <dict>
-        <key>io.darevader.MacUninstaller.HelperTool</key>
+        <key>com.r33hab.macuninstall.HelperTool</key>
         <true/>
     </dict>
 </dict>

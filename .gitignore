@@ -29,3 +29,15 @@ build/
 *.swp
 *.swo
 *~
+.superpowers/
+generated_imgs/
+
+# Docs/specs (internal)
+docs/superpowers/
+
+# Sensitive
+*.env
+*.pem
+*.p12
+*.key
+credentials.*

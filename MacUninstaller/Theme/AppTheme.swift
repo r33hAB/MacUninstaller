@@ -37,3 +37,43 @@ extension Color {
         )
     }
 }
+
+// MARK: - View Modifiers
+
+struct GradientButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(AppTheme.primaryGradient)
+            .foregroundStyle(.white)
+            .fontWeight(.semibold)
+            .font(.system(size: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .opacity(configuration.isPressed ? 0.8 : 1.0)
+    }
+}
+
+struct CardModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(AppTheme.backgroundCard)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(AppTheme.borderLight, lineWidth: 1)
+            )
+    }
+}
+
+extension View {
+    func cardStyle() -> some View {
+        modifier(CardModifier())
+    }
+}
+
+extension Int64 {
+    var formattedFileSize: String {
+        ByteCountFormatter.string(fromByteCount: self, countStyle: .file)
+    }
+}
