@@ -92,5 +92,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.r33hab.macuninstall.Tests
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         GENERATE_INFOPLIST_FILE: true
+        CODE_SIGN_IDENTITY: "Developer ID Application: KRISTOFFER LERSVEEN (4QK74D4L3J)"
+        DEVELOPMENT_TEAM: 4QK74D4L3J
+        CODE_SIGN_STYLE: Manual
     dependencies:
       - target: MacUninstaller
