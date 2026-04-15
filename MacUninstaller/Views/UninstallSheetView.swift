@@ -8,6 +8,7 @@ struct UninstallSheetView: View {
     @State private var errorMessage: String?
     @State private var showError = false
     @State private var isUninstalling = false
+    @AppStorage("useTrash") private var useTrash: Bool = true
     @State private var uninstallDone = false
 
     init(app: AppInfo, onDismiss: @escaping () -> Void, onComplete: (() -> Void)? = nil) {
@@ -159,7 +160,7 @@ struct UninstallSheetView: View {
                     Task {
                         let service = UninstallService()
                         do {
-                            let result = try await service.uninstall(paths: paths)
+                            let result = try await service.uninstall(paths: paths, useTrash: useTrash)
                             if !result.failedPaths.isEmpty {
                                 let failures = result.failedPaths.map { "\($0.path.lastPathComponent): \($0.error.localizedDescription)" }
                                 errorMessage = failures.joined(separator: "\n")
