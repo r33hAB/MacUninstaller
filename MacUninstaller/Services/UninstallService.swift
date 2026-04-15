@@ -1,7 +1,6 @@
 import Foundation
 import Security
 import AppKit
-import LocalAuthentication
 
 enum UninstallError: Error, LocalizedError {
     case permissionDenied(path: String)
@@ -34,41 +33,29 @@ struct UninstallResult {
 final class UninstallService {
     private let fileManager = FileManager.default
 
-    /// Cached authorization ref — persists for the app's lifetime.
-    /// User enters password once, reused for every admin operation until quit.
+    /// Cached auth ref — one Touch ID/password per session
     private static var authRef: AuthorizationRef?
 
-    /// Whether user has authenticated this session (Touch ID or password)
-    private static var isAuthenticated = false
-
-    /// Authenticate and get authorization ref.
-    /// Tries Touch ID first, creates auth ref without interaction if Touch ID succeeds.
-    /// Falls back to system password dialog if Touch ID unavailable.
-    private func authenticateAndAuthorize() async throws -> AuthorizationRef {
+    /// Get authorization with Touch ID support. Shows native macOS dialog.
+    /// Cached after first successful auth — no repeated prompts.
+    private func getAuth() throws -> AuthorizationRef {
         if let existing = Self.authRef { return existing }
 
-        // Try Touch ID first
-        let usedTouchID = await tryTouchID()
-
-        // Create authorization ref
         var ref: AuthorizationRef?
-        let createStatus = AuthorizationCreate(nil, nil, [], &ref)
-        guard createStatus == errAuthorizationSuccess, let authRef = ref else {
-            throw UninstallError.authFailed("Could not create authorization reference")
+        var status = AuthorizationCreate(nil, nil, [], &ref)
+        guard status == errAuthorizationSuccess, let authRef = ref else {
+            throw UninstallError.authFailed("Could not create authorization")
         }
 
+        // This triggers the native macOS auth dialog with Touch ID
         let rightName = kAuthorizationRightExecute
         var item = rightName.withCString { cStr in
             AuthorizationItem(name: cStr, valueLength: 0, value: nil, flags: 0)
         }
 
-        let status = withUnsafeMutablePointer(to: &item) { itemPtr in
+        status = withUnsafeMutablePointer(to: &item) { itemPtr in
             var rights = AuthorizationRights(count: 1, items: itemPtr)
-            // If Touch ID succeeded, don't show password dialog (no interactionAllowed)
-            // If Touch ID failed/unavailable, show the system password dialog
-            let flags: AuthorizationFlags = usedTouchID
-                ? [.preAuthorize, .extendRights]
-                : [.interactionAllowed, .preAuthorize, .extendRights]
+            let flags: AuthorizationFlags = [.interactionAllowed, .preAuthorize, .extendRights]
             return AuthorizationCopyRights(authRef, &rights, nil, flags, nil)
         }
 
@@ -77,49 +64,13 @@ final class UninstallService {
             throw UninstallError.cancelled
         }
 
-        // If non-interactive auth failed (Touch ID doesn't grant sudo),
-        // fall back to interactive
-        if status != errAuthorizationSuccess && usedTouchID {
-            let retryStatus = withUnsafeMutablePointer(to: &item) { itemPtr in
-                var rights = AuthorizationRights(count: 1, items: itemPtr)
-                let flags: AuthorizationFlags = [.interactionAllowed, .preAuthorize, .extendRights]
-                return AuthorizationCopyRights(authRef, &rights, nil, flags, nil)
-            }
-
-            if retryStatus == errAuthorizationCanceled {
-                AuthorizationFree(authRef, [])
-                throw UninstallError.cancelled
-            }
-
-            guard retryStatus == errAuthorizationSuccess else {
-                AuthorizationFree(authRef, [])
-                throw UninstallError.authFailed("Authorization denied")
-            }
-        } else if status != errAuthorizationSuccess {
+        guard status == errAuthorizationSuccess else {
             AuthorizationFree(authRef, [])
-            throw UninstallError.authFailed("Authorization denied (status: \(status))")
+            throw UninstallError.authFailed("Authorization denied")
         }
 
         Self.authRef = authRef
         return authRef
-    }
-
-    /// Try Touch ID authentication. Returns true if succeeded.
-    private func tryTouchID() async -> Bool {
-        let context = LAContext()
-        var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
-            return false
-        }
-
-        do {
-            return try await context.evaluatePolicy(
-                .deviceOwnerAuthenticationWithBiometrics,
-                localizedReason: "MacUninstaller needs to remove protected files"
-            )
-        } catch {
-            return false
-        }
     }
 
     func uninstall(
@@ -146,7 +97,6 @@ final class UninstallService {
 
             let size = itemSize(path)
 
-            // Try user-level first
             do {
                 if useTrash {
                     try await trashItem(at: path)
@@ -160,12 +110,11 @@ final class UninstallService {
             }
         }
 
-        // Escalate all failures with one admin auth
+        // One auth prompt (Touch ID) for all failed paths
         if !needsEscalation.isEmpty {
             do {
-                // Use osascript which triggers the native macOS auth dialog
-                // On macOS 26 this dialog supports Touch ID natively
-                try executeSudo(items: needsEscalation)
+                let authRef = try getAuth()
+                try executeWithAuth(authRef: authRef, items: needsEscalation)
                 for item in needsEscalation {
                     removed.append(item.url)
                     freedBytes += item.size
@@ -192,53 +141,7 @@ final class UninstallService {
         )
     }
 
-    /// Execute rm via sudo — works with Touch ID if PAM is configured
-    private func executeSudo(items: [(url: URL, size: Int64)]) throws {
-        let validPaths = items.compactMap { item -> String? in
-            let canonical = item.url.resolvingSymlinksInPath().standardized.path
-            let isBlocked = AppConstants.blockedPaths.contains { canonical.hasPrefix($0) }
-            guard !isBlocked else { return nil }
-            guard FileManager.default.fileExists(atPath: canonical) else { return nil }
-            return canonical
-        }
-
-        guard !validPaths.isEmpty else { return }
-
-        let script = validPaths.map { path in
-            path.replacingOccurrences(of: "'", with: "'\\''")
-        }.map { "rm -rf '\($0)'" }.joined(separator: "; ")
-
-        // Run via osascript with administrator privileges
-        // This shows the native macOS auth dialog which supports Touch ID
-        let process = Process()
-        process.executableURL = URL(filePath: "/usr/bin/osascript")
-        process.arguments = [
-            "-e",
-            "do shell script \"\(script.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\""))\" with administrator privileges"
-        ]
-
-        let errPipe = Pipe()
-        process.standardError = errPipe
-        process.standardOutput = Pipe()
-
-        try process.run()
-        process.waitUntilExit()
-
-        if process.terminationStatus != 0 {
-            let errorData = errPipe.fileHandleForReading.readDataToEndOfFile()
-            let errorMsg = String(data: errorData, encoding: .utf8) ?? ""
-            if errorMsg.contains("-128") || errorMsg.contains("User canceled") {
-                throw UninstallError.cancelled
-            }
-            // If osascript fails, throw but don't crash
-            if !errorMsg.isEmpty {
-                throw UninstallError.authFailed(errorMsg.trimmingCharacters(in: .whitespacesAndNewlines))
-            }
-        }
-    }
-
     private func trashItem(at url: URL) async throws {
-        // Try NSWorkspace.recycle first — respects App Management permission
         do {
             try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
                 DispatchQueue.main.async {
@@ -252,16 +155,13 @@ final class UninstallService {
                 }
             }
         } catch {
-            // Fallback to FileManager
             var resultingURL: NSURL?
             try fileManager.trashItem(at: url, resultingItemURL: &resultingURL)
         }
     }
 
-    /// Run rm -rf with admin privileges using the cached AuthorizationRef.
-    /// Uses AuthorizationExecuteWithPrivileges (deprecated but functional).
-    private func executePrivileged(authRef: AuthorizationRef, items: [(url: URL, size: Int64)]) throws {
-        // Validate and canonicalize all paths first
+    /// Execute rm with the authorized auth ref via the C bridge
+    private func executeWithAuth(authRef: AuthorizationRef, items: [(url: URL, size: Int64)]) throws {
         let validPaths = items.compactMap { item -> String? in
             let canonical = item.url.resolvingSymlinksInPath().standardized.path
             let isBlocked = AppConstants.blockedPaths.contains { canonical.hasPrefix($0) }
@@ -276,7 +176,6 @@ final class UninstallService {
             path.replacingOccurrences(of: "'", with: "'\\''")
         }.map { "rm -rf '\($0)'" }.joined(separator: "; ")
 
-        // Use C bridge to call AuthorizationExecuteWithPrivileges
         let cFlag = strdup("-c")!
         let cScript = strdup(script)!
         let cArgs: [UnsafePointer<CChar>?] = [
