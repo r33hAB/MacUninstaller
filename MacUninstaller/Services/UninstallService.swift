@@ -1,5 +1,6 @@
 import Foundation
 import Security
+import AppKit
 
 enum UninstallError: Error, LocalizedError {
     case permissionDenied(path: String)
@@ -144,8 +145,19 @@ final class UninstallService {
     }
 
     private func trashItem(at url: URL) throws {
-        var resultingURL: NSURL?
-        try fileManager.trashItem(at: url, resultingItemURL: &resultingURL)
+        // Try NSWorkspace.recycle first — works with App Management permission
+        var recycleError: Error?
+        let semaphore = DispatchSemaphore(value: 0)
+        NSWorkspace.shared.recycle([url]) { _, error in
+            recycleError = error
+            semaphore.signal()
+        }
+        semaphore.wait()
+        if let error = recycleError {
+            // Fallback to FileManager
+            var resultingURL: NSURL?
+            try fileManager.trashItem(at: url, resultingItemURL: &resultingURL)
+        }
     }
 
     /// Run rm -rf with admin privileges using the cached AuthorizationRef.

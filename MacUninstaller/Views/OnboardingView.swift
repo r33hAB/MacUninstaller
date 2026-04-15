@@ -43,10 +43,7 @@ struct OnboardingView: View {
                     ],
                     buttonTitle: "Open App Management Settings",
                     action: {
-                        // Open Privacy & Security > App Management
-                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AppBundles") {
-                            NSWorkspace.shared.open(url)
-                        }
+                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_AppBundles")!)
                     }
                 )
             } else {
@@ -61,9 +58,7 @@ struct OnboardingView: View {
                     ],
                     buttonTitle: "Open Finder Extension Settings",
                     action: {
-                        if let url = URL(string: "x-apple.systempreferences:com.apple.preferences.extensions?Finder") {
-                            NSWorkspace.shared.open(url)
-                        }
+                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Extensions_Finder")!)
                     }
                 )
             }
