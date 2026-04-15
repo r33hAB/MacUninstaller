@@ -183,11 +183,10 @@ final class AppScanner {
         let appCount = components.filter { $0.hasSuffix(".app") }.count
         if appCount > 1 && !isKnownAppDirectory(url) { return false }
 
-        // Skip background agents and daemons (no UI)
+        // Skip background-only apps (no UI at all)
         if let bgOnly = info["LSBackgroundOnly"] as? Bool, bgOnly { return false }
         if let bgOnly = info["LSBackgroundOnly"] as? String, bgOnly == "1" { return false }
-        if let uiElement = info["LSUIElement"] as? Bool, uiElement { return false }
-        if let uiElement = info["LSUIElement"] as? String, uiElement == "1" { return false }
+        // NOTE: LSUIElement apps (menu bar apps) are kept — they are user-facing
 
         // Skip Automator droplets and actions
         let name = url.deletingPathExtension().lastPathComponent

@@ -1,6 +1,7 @@
 import Foundation
 import Security
 import AppKit
+import LocalAuthentication
 
 enum UninstallError: Error, LocalizedError {
     case permissionDenied(path: String)
@@ -37,11 +38,47 @@ final class UninstallService {
     /// User enters password once, reused for every admin operation until quit.
     private static var authRef: AuthorizationRef?
 
-    /// Get or create admin authorization (password prompt only on first call)
+    /// Whether user has authenticated this session (Touch ID or password)
+    private static var isAuthenticated = false
+
+    /// Authenticate with Touch ID first, fall back to password
+    private func authenticate() async throws {
+        if Self.isAuthenticated { return }
+
+        let context = LAContext()
+        context.localizedReason = "MacUninstaller needs permission to remove protected files"
+
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+            // No biometrics available, fall back to Authorization Services
+            try getAuthFallback()
+            return
+        }
+
+        do {
+            let success = try await context.evaluatePolicy(
+                .deviceOwnerAuthentication,
+                localizedReason: "Allow MacUninstaller to remove protected files"
+            )
+            if success {
+                Self.isAuthenticated = true
+            }
+        } catch {
+            throw UninstallError.cancelled
+        }
+    }
+
+    /// Fallback: Get admin authorization via system dialog (no Touch ID)
     private func getAuth() throws -> AuthorizationRef {
         if let existing = Self.authRef {
             return existing
         }
+        try getAuthFallback()
+        return Self.authRef!
+    }
+
+    private func getAuthFallback() throws {
+        if Self.authRef != nil { return }
 
         var ref: AuthorizationRef?
         var status = AuthorizationCreate(nil, nil, [], &ref)
@@ -49,7 +86,6 @@ final class UninstallService {
             throw UninstallError.authFailed("Could not create authorization reference")
         }
 
-        // Request the right to execute privileged commands
         let rightName = kAuthorizationRightExecute
         var item = rightName.withCString { cStr in
             AuthorizationItem(name: cStr, valueLength: 0, value: nil, flags: 0)
@@ -72,7 +108,7 @@ final class UninstallService {
         }
 
         Self.authRef = authRef
-        return authRef
+        Self.isAuthenticated = true
     }
 
     func uninstall(
@@ -113,9 +149,10 @@ final class UninstallService {
             }
         }
 
-        // Escalate all failures with one admin auth (single password prompt)
+        // Escalate all failures with one auth (Touch ID → password fallback)
         if !needsEscalation.isEmpty {
             do {
+                try await authenticate()
                 let authRef = try getAuth()
                 try executePrivileged(authRef: authRef, items: needsEscalation)
                 for item in needsEscalation {
