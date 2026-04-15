@@ -160,11 +160,12 @@ final class UninstallService {
             }
         }
 
-        // Escalate all failures with one auth (Touch ID → password fallback)
+        // Escalate all failures with one admin auth
         if !needsEscalation.isEmpty {
             do {
-                let authRef = try await authenticateAndAuthorize()
-                try executePrivileged(authRef: authRef, items: needsEscalation)
+                // Use osascript which triggers the native macOS auth dialog
+                // On macOS 26 this dialog supports Touch ID natively
+                try executeSudo(items: needsEscalation)
                 for item in needsEscalation {
                     removed.append(item.url)
                     freedBytes += item.size
@@ -189,6 +190,51 @@ final class UninstallService {
             failedPaths: failed,
             totalFreedBytes: freedBytes
         )
+    }
+
+    /// Execute rm via sudo — works with Touch ID if PAM is configured
+    private func executeSudo(items: [(url: URL, size: Int64)]) throws {
+        let validPaths = items.compactMap { item -> String? in
+            let canonical = item.url.resolvingSymlinksInPath().standardized.path
+            let isBlocked = AppConstants.blockedPaths.contains { canonical.hasPrefix($0) }
+            guard !isBlocked else { return nil }
+            guard FileManager.default.fileExists(atPath: canonical) else { return nil }
+            return canonical
+        }
+
+        guard !validPaths.isEmpty else { return }
+
+        let script = validPaths.map { path in
+            path.replacingOccurrences(of: "'", with: "'\\''")
+        }.map { "rm -rf '\($0)'" }.joined(separator: "; ")
+
+        // Run via osascript with administrator privileges
+        // This shows the native macOS auth dialog which supports Touch ID
+        let process = Process()
+        process.executableURL = URL(filePath: "/usr/bin/osascript")
+        process.arguments = [
+            "-e",
+            "do shell script \"\(script.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\""))\" with administrator privileges"
+        ]
+
+        let errPipe = Pipe()
+        process.standardError = errPipe
+        process.standardOutput = Pipe()
+
+        try process.run()
+        process.waitUntilExit()
+
+        if process.terminationStatus != 0 {
+            let errorData = errPipe.fileHandleForReading.readDataToEndOfFile()
+            let errorMsg = String(data: errorData, encoding: .utf8) ?? ""
+            if errorMsg.contains("-128") || errorMsg.contains("User canceled") {
+                throw UninstallError.cancelled
+            }
+            // If osascript fails, throw but don't crash
+            if !errorMsg.isEmpty {
+                throw UninstallError.authFailed(errorMsg.trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
     }
 
     private func trashItem(at url: URL) async throws {
