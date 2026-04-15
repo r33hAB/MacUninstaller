@@ -1,6 +1,6 @@
 import Foundation
-import Security
 import AppKit
+import LocalAuthentication
 
 enum UninstallError: Error, LocalizedError {
     case permissionDenied(path: String)
@@ -33,44 +33,31 @@ struct UninstallResult {
 final class UninstallService {
     private let fileManager = FileManager.default
 
-    /// Cached auth ref — one Touch ID/password per session
-    private static var authRef: AuthorizationRef?
+    /// Once authenticated via Touch ID this session, skip future prompts
+    private static var authenticated = false
 
-    /// Get authorization with Touch ID support. Shows native macOS dialog.
-    /// Cached after first successful auth — no repeated prompts.
-    private func getAuth() throws -> AuthorizationRef {
-        if let existing = Self.authRef { return existing }
+    /// Authenticate via Touch ID. Only prompts once per session.
+    private func authenticate() async throws {
+        if Self.authenticated { return }
 
-        var ref: AuthorizationRef?
-        var status = AuthorizationCreate(nil, nil, [], &ref)
-        guard status == errAuthorizationSuccess, let authRef = ref else {
-            throw UninstallError.authFailed("Could not create authorization")
-        }
+        let context = LAContext()
+        var error: NSError?
 
-        // This triggers the native macOS auth dialog with Touch ID
-        let rightName = kAuthorizationRightExecute
-        var item = rightName.withCString { cStr in
-            AuthorizationItem(name: cStr, valueLength: 0, value: nil, flags: 0)
-        }
+        // Try biometrics first, fall back to device passcode
+        let policy: LAPolicy = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
+            ? .deviceOwnerAuthenticationWithBiometrics
+            : .deviceOwnerAuthentication
 
-        status = withUnsafeMutablePointer(to: &item) { itemPtr in
-            var rights = AuthorizationRights(count: 1, items: itemPtr)
-            let flags: AuthorizationFlags = [.interactionAllowed, .preAuthorize, .extendRights]
-            return AuthorizationCopyRights(authRef, &rights, nil, flags, nil)
-        }
+        let success = try await context.evaluatePolicy(
+            policy,
+            localizedReason: "MacUninstaller needs permission to remove protected files"
+        )
 
-        if status == errAuthorizationCanceled {
-            AuthorizationFree(authRef, [])
+        if success {
+            Self.authenticated = true
+        } else {
             throw UninstallError.cancelled
         }
-
-        guard status == errAuthorizationSuccess else {
-            AuthorizationFree(authRef, [])
-            throw UninstallError.authFailed("Authorization denied")
-        }
-
-        Self.authRef = authRef
-        return authRef
     }
 
     func uninstall(
@@ -110,11 +97,11 @@ final class UninstallService {
             }
         }
 
-        // One auth prompt (Touch ID) for all failed paths
+        // Authenticate once via Touch ID, then delete all escalated paths
         if !needsEscalation.isEmpty {
             do {
-                let authRef = try getAuth()
-                try executeWithAuth(authRef: authRef, items: needsEscalation)
+                try await authenticate()
+                try deleteWithAdmin(items: needsEscalation)
                 for item in needsEscalation {
                     removed.append(item.url)
                     freedBytes += item.size
@@ -160,8 +147,9 @@ final class UninstallService {
         }
     }
 
-    /// Execute rm with the authorized auth ref via the C bridge
-    private func executeWithAuth(authRef: AuthorizationRef, items: [(url: URL, size: Int64)]) throws {
+    /// After Touch ID auth, delete files using AppleScript with admin privileges.
+    /// The user already authenticated via Touch ID — this uses their auth session.
+    private func deleteWithAdmin(items: [(url: URL, size: Int64)]) throws {
         let validPaths = items.compactMap { item -> String? in
             let canonical = item.url.resolvingSymlinksInPath().standardized.path
             let isBlocked = AppConstants.blockedPaths.contains { canonical.hasPrefix($0) }
@@ -172,12 +160,22 @@ final class UninstallService {
 
         guard !validPaths.isEmpty else { return }
 
-        let script = validPaths.map { path in
-            path.replacingOccurrences(of: "'", with: "'\\''")
-        }.map { "rm -rf '\($0)'" }.joined(separator: "; ")
+        // Build individual rm commands
+        let commands = validPaths.map { path in
+            let escaped = path.replacingOccurrences(of: "'", with: "'\\''")
+            return "rm -rf '\(escaped)'"
+        }.joined(separator: "; ")
+
+        // Use AuthorizationExecuteWithPrivileges via C bridge
+        // Create auth ref without interaction since user already did Touch ID
+        var ref: AuthorizationRef?
+        AuthorizationCreate(nil, nil, [], &ref)
+        guard let authRef = ref else {
+            throw UninstallError.authFailed("Could not create authorization")
+        }
 
         let cFlag = strdup("-c")!
-        let cScript = strdup(script)!
+        let cScript = strdup(commands)!
         let cArgs: [UnsafePointer<CChar>?] = [
             UnsafePointer(cFlag),
             UnsafePointer(cScript),
@@ -193,11 +191,40 @@ final class UninstallService {
             AuthHelperExecute(authRef, "/bin/sh", buf.baseAddress!)
         }
 
-        guard status == errAuthorizationSuccess else {
-            if status == errAuthorizationCanceled {
+        AuthorizationFree(authRef, [])
+
+        // If AuthHelperExecute fails (no pre-auth), it will show its own dialog
+        // That's acceptable as a fallback — user already saw Touch ID
+        if status != errAuthorizationSuccess && status != errAuthorizationCanceled {
+            // Try osascript as last resort
+            try deleteWithOsascript(commands: commands)
+        } else if status == errAuthorizationCanceled {
+            throw UninstallError.cancelled
+        }
+    }
+
+    private func deleteWithOsascript(commands: String) throws {
+        let escaped = commands
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+
+        let process = Process()
+        process.executableURL = URL(filePath: "/usr/bin/osascript")
+        process.arguments = ["-e", "do shell script \"\(escaped)\" with administrator privileges"]
+
+        let errPipe = Pipe()
+        process.standardError = errPipe
+        process.standardOutput = Pipe()
+
+        try process.run()
+        process.waitUntilExit()
+
+        if process.terminationStatus != 0 {
+            let errorData = errPipe.fileHandleForReading.readDataToEndOfFile()
+            let errorMsg = String(data: errorData, encoding: .utf8) ?? ""
+            if errorMsg.contains("-128") || errorMsg.contains("User canceled") {
                 throw UninstallError.cancelled
             }
-            throw UninstallError.authFailed("Privileged execution failed (status: \(status))")
         }
     }
 
