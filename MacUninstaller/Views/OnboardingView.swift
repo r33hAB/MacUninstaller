@@ -53,9 +53,10 @@ struct OnboardingView: View {
                         "Find MacUninstaller under Finder Extensions",
                         "Toggle it on"
                     ],
-                    buttonTitle: "Open Finder Extension Settings",
+                    buttonTitle: "Open Extensions Settings",
                     action: {
-                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Extensions_Finder")!)
+                        // macOS 14+: Extensions are under General > Login Items & Extensions
+                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension")!)
                     }
                 )
             }

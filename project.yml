@@ -33,6 +33,9 @@ targets:
         ENABLE_HARDENED_RUNTIME: true
         SWIFT_OBJC_BRIDGING_HEADER: MacUninstaller/MacUninstaller-Bridging-Header.h
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    dependencies:
+      - target: FinderExtension
+        embed: true
     scheme:
       testTargets:
         - MacUninstallerTests
@@ -69,13 +72,14 @@ targets:
         INFOPLIST_FILE: FinderExtension/Info.plist
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_IDENTITY: "Developer ID Application: KRISTOFFER LERSVEEN (4QK74D4L3J)"
+        DEVELOPMENT_TEAM: 4QK74D4L3J
+        CODE_SIGN_STYLE: Manual
+        ENABLE_HARDENED_RUNTIME: true
         LD_RUNPATH_SEARCH_PATHS:
           - "$(inherited)"
           - "@executable_path/../Frameworks"
           - "@executable_path/../../../../Frameworks"
-    dependencies:
-      - target: MacUninstaller
-        embed: false
 
   MacUninstallerTests:
     type: bundle.unit-test
