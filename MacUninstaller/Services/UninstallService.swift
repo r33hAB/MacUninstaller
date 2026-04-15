@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 import LocalAuthentication
+import Security
 
 enum UninstallError: Error, LocalizedError {
     case permissionDenied(path: String)
@@ -33,32 +34,160 @@ struct UninstallResult {
 final class UninstallService {
     private let fileManager = FileManager.default
 
-    /// Once authenticated via Touch ID this session, skip future prompts
-    private static var authenticated = false
+    /// Keychain service name for storing admin password
+    private static let keychainService = "com.r33hab.macuninstall.admin"
+    private static let keychainAccount = "admin-password"
 
-    /// Authenticate via Touch ID. Only prompts once per session.
-    private func authenticate() async throws {
-        if Self.authenticated { return }
+    /// Cached password for this session
+    private static var cachedPassword: String?
 
+    // MARK: - Keychain
+
+    /// Save password to Keychain (protected by Touch ID)
+    private func saveToKeychain(password: String) {
+        // Delete existing
+        let deleteQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.keychainService,
+            kSecAttrAccount as String: Self.keychainAccount,
+        ]
+        SecItemDelete(deleteQuery as CFDictionary)
+
+        // Create access control requiring Touch ID
+        guard let access = SecAccessControlCreateWithFlags(
+            nil,
+            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            .biometryCurrentSet,
+            nil
+        ) else { return }
+
+        let addQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.keychainService,
+            kSecAttrAccount as String: Self.keychainAccount,
+            kSecValueData as String: password.data(using: .utf8)!,
+            kSecAttrAccessControl as String: access,
+        ]
+        SecItemAdd(addQuery as CFDictionary, nil)
+    }
+
+    /// Retrieve password from Keychain using Touch ID
+    private func getFromKeychain() async -> String? {
         let context = LAContext()
-        var error: NSError?
+        context.localizedReason = "Unlock admin access for MacUninstaller"
 
-        // Try biometrics first, fall back to device passcode
-        let policy: LAPolicy = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
-            ? .deviceOwnerAuthenticationWithBiometrics
-            : .deviceOwnerAuthentication
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.keychainService,
+            kSecAttrAccount as String: Self.keychainAccount,
+            kSecReturnData as String: true,
+            kSecUseAuthenticationContext as String: context,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+        ]
 
-        let success = try await context.evaluatePolicy(
-            policy,
-            localizedReason: "MacUninstaller needs permission to remove protected files"
-        )
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
 
-        if success {
-            Self.authenticated = true
-        } else {
+        if status == errSecSuccess, let data = result as? Data,
+           let password = String(data: data, encoding: .utf8) {
+            return password
+        }
+        return nil
+    }
+
+    /// Check if we have a stored password in Keychain
+    private func hasKeychainPassword() -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.keychainService,
+            kSecAttrAccount as String: Self.keychainAccount,
+            kSecUseAuthenticationUI as String: kSecUseAuthenticationUISkip,
+        ]
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        return status == errSecInteractionNotAllowed || status == errSecSuccess
+    }
+
+    // MARK: - Auth Flow
+
+    /// Get admin password: Touch ID (from Keychain) → or ask once and save
+    private func getAdminPassword() async throws -> String {
+        // 1. Already cached this session
+        if let cached = Self.cachedPassword { return cached }
+
+        // 2. Try Keychain (triggers Touch ID)
+        if hasKeychainPassword() {
+            if let password = await getFromKeychain() {
+                Self.cachedPassword = password
+                return password
+            }
+            // Touch ID failed/cancelled — user can still enter manually
+        }
+
+        // 3. First time — ask for password via dialog, save to Keychain
+        guard let password = await askForPassword() else {
             throw UninstallError.cancelled
         }
+
+        // Verify password works
+        let verified = verifyPassword(password)
+        guard verified else {
+            throw UninstallError.authFailed("Incorrect password")
+        }
+
+        // Save to Keychain for future Touch ID use
+        saveToKeychain(password: password)
+        Self.cachedPassword = password
+        return password
     }
+
+    /// Show a native password dialog
+    private func askForPassword() async -> String? {
+        return await MainActor.run {
+            let alert = NSAlert()
+            alert.messageText = "Administrator Password"
+            alert.informativeText = "Enter your password to allow MacUninstaller to remove protected files.\n\nYour password will be saved securely and protected by Touch ID for future use."
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: "Cancel")
+
+            let input = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+            input.placeholderString = "Password"
+            alert.accessoryView = input
+            alert.window.initialFirstResponder = input
+
+            let response = alert.runModal()
+            if response == .alertFirstButtonReturn {
+                return input.stringValue.isEmpty ? nil : input.stringValue
+            }
+            return nil
+        }
+    }
+
+    /// Verify password by running a harmless sudo command
+    private func verifyPassword(_ password: String) -> Bool {
+        let process = Process()
+        process.executableURL = URL(filePath: "/usr/bin/sudo")
+        process.arguments = ["-S", "-v"]
+        process.environment = ["PATH": "/usr/bin:/bin"]
+
+        let inputPipe = Pipe()
+        process.standardInput = inputPipe
+        process.standardOutput = Pipe()
+        process.standardError = Pipe()
+
+        do {
+            try process.run()
+            inputPipe.fileHandleForWriting.write("\(password)\n".data(using: .utf8)!)
+            inputPipe.fileHandleForWriting.closeFile()
+            process.waitUntilExit()
+            return process.terminationStatus == 0
+        } catch {
+            return false
+        }
+    }
+
+    // MARK: - Uninstall
 
     func uninstall(
         paths: [URL],
@@ -97,11 +226,10 @@ final class UninstallService {
             }
         }
 
-        // Authenticate once via Touch ID, then delete all escalated paths
         if !needsEscalation.isEmpty {
             do {
-                try await authenticate()
-                try deleteWithAdmin(items: needsEscalation)
+                let password = try await getAdminPassword()
+                try deleteWithSudo(password: password, items: needsEscalation)
                 for item in needsEscalation {
                     removed.append(item.url)
                     freedBytes += item.size
@@ -147,9 +275,8 @@ final class UninstallService {
         }
     }
 
-    /// After Touch ID auth, delete files using AppleScript with admin privileges.
-    /// The user already authenticated via Touch ID — this uses their auth session.
-    private func deleteWithAdmin(items: [(url: URL, size: Int64)]) throws {
+    /// Delete files using sudo with the stored password
+    private func deleteWithSudo(password: String, items: [(url: URL, size: Int64)]) throws {
         let validPaths = items.compactMap { item -> String? in
             let canonical = item.url.resolvingSymlinksInPath().standardized.path
             let isBlocked = AppConstants.blockedPaths.contains { canonical.hasPrefix($0) }
@@ -160,71 +287,42 @@ final class UninstallService {
 
         guard !validPaths.isEmpty else { return }
 
-        // Build individual rm commands
         let commands = validPaths.map { path in
             let escaped = path.replacingOccurrences(of: "'", with: "'\\''")
             return "rm -rf '\(escaped)'"
         }.joined(separator: "; ")
 
-        // Use AuthorizationExecuteWithPrivileges via C bridge
-        // Create auth ref without interaction since user already did Touch ID
-        var ref: AuthorizationRef?
-        AuthorizationCreate(nil, nil, [], &ref)
-        guard let authRef = ref else {
-            throw UninstallError.authFailed("Could not create authorization")
-        }
-
-        let cFlag = strdup("-c")!
-        let cScript = strdup(commands)!
-        let cArgs: [UnsafePointer<CChar>?] = [
-            UnsafePointer(cFlag),
-            UnsafePointer(cScript),
-            nil
-        ]
-        defer {
-            free(cFlag)
-            free(cScript)
-        }
-
-        var mutableArgs = cArgs
-        let status = mutableArgs.withUnsafeMutableBufferPointer { buf in
-            AuthHelperExecute(authRef, "/bin/sh", buf.baseAddress!)
-        }
-
-        AuthorizationFree(authRef, [])
-
-        // If AuthHelperExecute fails (no pre-auth), it will show its own dialog
-        // That's acceptable as a fallback — user already saw Touch ID
-        if status != errAuthorizationSuccess && status != errAuthorizationCanceled {
-            // Try osascript as last resort
-            try deleteWithOsascript(commands: commands)
-        } else if status == errAuthorizationCanceled {
-            throw UninstallError.cancelled
-        }
-    }
-
-    private func deleteWithOsascript(commands: String) throws {
-        let escaped = commands
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
-
         let process = Process()
-        process.executableURL = URL(filePath: "/usr/bin/osascript")
-        process.arguments = ["-e", "do shell script \"\(escaped)\" with administrator privileges"]
+        process.executableURL = URL(filePath: "/usr/bin/sudo")
+        process.arguments = ["-S", "/bin/sh", "-c", commands]
+        process.environment = ["PATH": "/usr/bin:/bin:/usr/sbin:/sbin"]
 
+        let inputPipe = Pipe()
         let errPipe = Pipe()
-        process.standardError = errPipe
+        process.standardInput = inputPipe
         process.standardOutput = Pipe()
+        process.standardError = errPipe
 
         try process.run()
+        inputPipe.fileHandleForWriting.write("\(password)\n".data(using: .utf8)!)
+        inputPipe.fileHandleForWriting.closeFile()
         process.waitUntilExit()
 
         if process.terminationStatus != 0 {
             let errorData = errPipe.fileHandleForReading.readDataToEndOfFile()
             let errorMsg = String(data: errorData, encoding: .utf8) ?? ""
-            if errorMsg.contains("-128") || errorMsg.contains("User canceled") {
-                throw UninstallError.cancelled
+            if errorMsg.contains("incorrect password") {
+                // Password changed — clear keychain and retry next time
+                Self.cachedPassword = nil
+                let deleteQuery: [String: Any] = [
+                    kSecClass as String: kSecClassGenericPassword,
+                    kSecAttrService as String: Self.keychainService,
+                    kSecAttrAccount as String: Self.keychainAccount,
+                ]
+                SecItemDelete(deleteQuery as CFDictionary)
+                throw UninstallError.authFailed("Password incorrect. Please try again.")
             }
+            throw UninstallError.authFailed(errorMsg.trimmingCharacters(in: .whitespacesAndNewlines))
         }
     }
 
