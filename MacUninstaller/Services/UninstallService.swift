@@ -41,48 +41,19 @@ final class UninstallService {
     /// Whether user has authenticated this session (Touch ID or password)
     private static var isAuthenticated = false
 
-    /// Authenticate with Touch ID first, fall back to password
-    private func authenticate() async throws {
-        if Self.isAuthenticated { return }
+    /// Authenticate and get authorization ref.
+    /// Tries Touch ID first, creates auth ref without interaction if Touch ID succeeds.
+    /// Falls back to system password dialog if Touch ID unavailable.
+    private func authenticateAndAuthorize() async throws -> AuthorizationRef {
+        if let existing = Self.authRef { return existing }
 
-        let context = LAContext()
-        context.localizedReason = "MacUninstaller needs permission to remove protected files"
+        // Try Touch ID first
+        let usedTouchID = await tryTouchID()
 
-        var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            // No biometrics available, fall back to Authorization Services
-            try getAuthFallback()
-            return
-        }
-
-        do {
-            let success = try await context.evaluatePolicy(
-                .deviceOwnerAuthentication,
-                localizedReason: "Allow MacUninstaller to remove protected files"
-            )
-            if success {
-                Self.isAuthenticated = true
-            }
-        } catch {
-            throw UninstallError.cancelled
-        }
-    }
-
-    /// Fallback: Get admin authorization via system dialog (no Touch ID)
-    private func getAuth() throws -> AuthorizationRef {
-        if let existing = Self.authRef {
-            return existing
-        }
-        try getAuthFallback()
-        return Self.authRef!
-    }
-
-    private func getAuthFallback() throws {
-        if Self.authRef != nil { return }
-
+        // Create authorization ref
         var ref: AuthorizationRef?
-        var status = AuthorizationCreate(nil, nil, [], &ref)
-        guard status == errAuthorizationSuccess, let authRef = ref else {
+        let createStatus = AuthorizationCreate(nil, nil, [], &ref)
+        guard createStatus == errAuthorizationSuccess, let authRef = ref else {
             throw UninstallError.authFailed("Could not create authorization reference")
         }
 
@@ -91,9 +62,13 @@ final class UninstallService {
             AuthorizationItem(name: cStr, valueLength: 0, value: nil, flags: 0)
         }
 
-        status = withUnsafeMutablePointer(to: &item) { itemPtr in
+        let status = withUnsafeMutablePointer(to: &item) { itemPtr in
             var rights = AuthorizationRights(count: 1, items: itemPtr)
-            let flags: AuthorizationFlags = [.interactionAllowed, .preAuthorize, .extendRights]
+            // If Touch ID succeeded, don't show password dialog (no interactionAllowed)
+            // If Touch ID failed/unavailable, show the system password dialog
+            let flags: AuthorizationFlags = usedTouchID
+                ? [.preAuthorize, .extendRights]
+                : [.interactionAllowed, .preAuthorize, .extendRights]
             return AuthorizationCopyRights(authRef, &rights, nil, flags, nil)
         }
 
@@ -102,13 +77,49 @@ final class UninstallService {
             throw UninstallError.cancelled
         }
 
-        guard status == errAuthorizationSuccess else {
+        // If non-interactive auth failed (Touch ID doesn't grant sudo),
+        // fall back to interactive
+        if status != errAuthorizationSuccess && usedTouchID {
+            let retryStatus = withUnsafeMutablePointer(to: &item) { itemPtr in
+                var rights = AuthorizationRights(count: 1, items: itemPtr)
+                let flags: AuthorizationFlags = [.interactionAllowed, .preAuthorize, .extendRights]
+                return AuthorizationCopyRights(authRef, &rights, nil, flags, nil)
+            }
+
+            if retryStatus == errAuthorizationCanceled {
+                AuthorizationFree(authRef, [])
+                throw UninstallError.cancelled
+            }
+
+            guard retryStatus == errAuthorizationSuccess else {
+                AuthorizationFree(authRef, [])
+                throw UninstallError.authFailed("Authorization denied")
+            }
+        } else if status != errAuthorizationSuccess {
             AuthorizationFree(authRef, [])
             throw UninstallError.authFailed("Authorization denied (status: \(status))")
         }
 
         Self.authRef = authRef
-        Self.isAuthenticated = true
+        return authRef
+    }
+
+    /// Try Touch ID authentication. Returns true if succeeded.
+    private func tryTouchID() async -> Bool {
+        let context = LAContext()
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+            return false
+        }
+
+        do {
+            return try await context.evaluatePolicy(
+                .deviceOwnerAuthenticationWithBiometrics,
+                localizedReason: "MacUninstaller needs to remove protected files"
+            )
+        } catch {
+            return false
+        }
     }
 
     func uninstall(
@@ -152,8 +163,7 @@ final class UninstallService {
         // Escalate all failures with one auth (Touch ID → password fallback)
         if !needsEscalation.isEmpty {
             do {
-                try await authenticate()
-                let authRef = try getAuth()
+                let authRef = try await authenticateAndAuthorize()
                 try executePrivileged(authRef: authRef, items: needsEscalation)
                 for item in needsEscalation {
                     removed.append(item.url)
