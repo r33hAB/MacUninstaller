@@ -1,13 +1,42 @@
 import SwiftUI
 
+class AppDelegate: NSObject, NSApplicationDelegate {
+    let serviceHandler = ServiceHandler()
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.servicesProvider = serviceHandler
+        NSUpdateDynamicServices()
+    }
+}
+
 @main
 struct MacUninstallerApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var appState = AppState()
+
     var body: some Scene {
         WindowGroup {
-            Text("MacUninstaller")
+            MainContentView()
                 .frame(minWidth: 900, minHeight: 600)
-                .background(AppTheme.backgroundPrimary)
+                .environmentObject(appState)
+                .onOpenURL { url in
+                    handleURL(url)
+                }
         }
         .windowStyle(.hiddenTitleBar)
+
+        Settings {
+            SettingsView()
+        }
+    }
+
+    private func handleURL(_ url: URL) {
+        guard url.scheme == AppConstants.urlScheme,
+              url.host == "uninstall",
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let pathParam = components.queryItems?.first(where: { $0.name == "path" })?.value
+        else { return }
+
+        appState.pendingUninstallPath = pathParam
     }
 }
