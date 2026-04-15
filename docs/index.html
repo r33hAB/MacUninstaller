@@ -12,15 +12,8 @@
             --orange:#f97316;--red:#ef4444;--purple:#8b5cf6;--blue:#667eea;
         }
         body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
-
-        /* Animations */
         .fade-up{opacity:0;transform:translateY(50px);transition:all 1s cubic-bezier(.16,1,.3,1)}
         .fade-up.vis{opacity:1;transform:translateY(0)}
-        .fade-up.vis:nth-child(2){transition-delay:.1s}
-        .fade-up.vis:nth-child(3){transition-delay:.2s}
-        .fade-up.vis:nth-child(4){transition-delay:.3s}
-        .fade-up.vis:nth-child(5){transition-delay:.4s}
-        .fade-up.vis:nth-child(6){transition-delay:.5s}
 
         /* Nav */
         nav{position:fixed;top:0;width:100%;z-index:100;padding:12px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,5,7,.75);backdrop-filter:blur(30px);border-bottom:1px solid rgba(26,26,37,.5)}
@@ -37,7 +30,7 @@
         .btn-g:hover{background:rgba(255,255,255,.08);border-color:var(--text3)}
 
         /* Hero */
-        .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:140px 32px 80px;position:relative}
+        .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:140px 32px 80px}
         .hero-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.15);color:var(--orange);margin-bottom:24px;text-transform:uppercase;letter-spacing:.5px}
         .hero h1{font-size:clamp(40px,7vw,76px);font-weight:800;line-height:1.05;letter-spacing:-3px;margin-bottom:20px}
         .hero h1 .gr{background:linear-gradient(135deg,var(--orange),var(--red),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% 200%;animation:grShift 5s ease infinite}
@@ -47,44 +40,80 @@
         .hero-meta{font-size:11px;color:var(--text3)}
 
         /* Battle Arena */
-        .arena{padding:40px 32px 80px;position:relative}
-        .arena-inner{max-width:900px;margin:0 auto;height:420px;position:relative;display:flex;align-items:center;justify-content:center}
+        .arena{padding:20px 32px 80px;position:relative}
+        .arena-inner{max-width:950px;margin:0 auto;height:380px;position:relative;display:flex;align-items:center;overflow:hidden;background:linear-gradient(180deg,transparent 60%,rgba(249,115,22,.03));border-radius:20px;border:1px solid var(--border)}
 
-        .machine{position:relative;z-index:2;transition:transform .4s cubic-bezier(.16,1,.3,1)}
-        .machine-body{width:260px;height:170px;background:linear-gradient(145deg,#1e1e2e,#14141f);border-radius:14px;border:1.5px solid #2e2e42;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 0 rgba(249,115,22,0),0 20px 50px rgba(0,0,0,.6);transition:box-shadow .3s}
-        .machine.charging .machine-body{box-shadow:0 0 60px 10px rgba(249,115,22,.2),0 20px 50px rgba(0,0,0,.6)}
-        .machine-screen{width:224px;height:134px;border-radius:8px;background:var(--bg);overflow:hidden}
-        .machine-bar{height:10px;display:flex;gap:4px;padding:3px 6px;background:#0a0a10}
-        .machine-bar i{width:5px;height:5px;border-radius:50%;display:block}
-        .machine-rows{padding:6px;display:flex;flex-direction:column;gap:3px}
-        .machine-row{height:8px;border-radius:3px;background:var(--card);position:relative;overflow:hidden}
-        .machine-row::after{content:'';position:absolute;left:-100%;top:0;height:100%;width:50%;background:linear-gradient(90deg,transparent,rgba(249,115,22,.3),transparent);animation:scanLine 2s ease-in-out infinite}
-        .machine-row:nth-child(2)::after{animation-delay:.3s}
-        .machine-row:nth-child(3)::after{animation-delay:.6s}
-        @keyframes scanLine{0%{left:-100%}100%{left:200%}}
-        .machine-stand{width:300px;height:6px;margin:-1px auto 0;background:linear-gradient(to bottom,#2e2e42,#1e1e2e);border-radius:0 0 4px 4px}
+        /* Ground line */
+        .arena-inner::after{content:'';position:absolute;bottom:60px;left:5%;right:5%;height:1px;background:linear-gradient(90deg,transparent,var(--border),var(--border),transparent)}
 
-        /* Energy blast */
-        .blast{position:absolute;left:50%;top:50%;transform:translate(-20%,-50%);z-index:3;pointer-events:none}
-        .blast-core{width:0;height:6px;border-radius:3px;background:linear-gradient(90deg,#fff,var(--orange),var(--red),transparent);opacity:0;transition:width .15s,opacity .1s;box-shadow:0 0 20px var(--orange),0 0 40px rgba(249,115,22,.3)}
-        .blast-core.fire{width:250px;opacity:1}
-        .blast-ring{position:absolute;right:-20px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:2px solid var(--orange);opacity:0;transition:all .3s}
-        .blast-ring.fire{opacity:.6;transform:translateY(-50%) scale(2);border-color:transparent}
+        /* Knight */
+        .knight{position:absolute;left:120px;bottom:60px;z-index:3;transition:transform .3s cubic-bezier(.16,1,.3,1)}
+        .knight-body{position:relative;width:60px;height:100px}
+        /* Helmet */
+        .knight .helm{position:absolute;top:0;left:10px;width:40px;height:36px;background:linear-gradient(135deg,#c0c0d0,#8888a0);border-radius:8px 8px 4px 4px;border:2px solid #6a6a80}
+        .knight .visor{position:absolute;top:14px;left:16px;width:28px;height:8px;background:#1a1a2a;border-radius:2px}
+        .knight .plume{position:absolute;top:-10px;left:18px;width:24px;height:14px;background:linear-gradient(135deg,var(--orange),var(--red));border-radius:12px 12px 0 0;transform-origin:bottom center}
+        /* Torso */
+        .knight .torso{position:absolute;top:36px;left:8px;width:44px;height:30px;background:linear-gradient(180deg,#9090a8,#707088);border-radius:4px;border:2px solid #6a6a80}
+        .knight .emblem{position:absolute;top:42px;left:20px;width:20px;height:16px;background:linear-gradient(135deg,var(--orange),var(--red));border-radius:3px;clip-path:polygon(50% 0%,100% 100%,0% 100%)}
+        /* Legs */
+        .knight .legs{position:absolute;top:66px;left:12px;display:flex;gap:6px}
+        .knight .leg{width:14px;height:34px;background:linear-gradient(180deg,#707088,#5a5a72);border-radius:3px;border:1px solid #5a5a72}
 
-        /* Junk targets */
-        .junk{position:absolute;right:60px;top:50%;transform:translateY(-50%);z-index:1;display:flex;flex-direction:column;gap:6px;transition:all .4s cubic-bezier(.16,1,.3,1)}
-        .junk.hit{transform:translateY(-50%) translateX(80px) scale(.85);opacity:.4;filter:blur(2px)}
-        .junk-item{padding:6px 16px;border-radius:8px;font-size:11px;font-weight:600;white-space:nowrap;position:relative;overflow:hidden;transition:all .3s}
-        .junk-item:nth-child(odd){background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
-        .junk-item:nth-child(even){background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);color:var(--orange)}
-        .junk-item:nth-child(1){transform:translateX(10px)}
-        .junk-item:nth-child(2){transform:translateX(-15px)}
-        .junk-item:nth-child(3){transform:translateX(25px)}
-        .junk-item:nth-child(4){transform:translateX(-5px)}
-        .junk-item:nth-child(5){transform:translateX(15px)}
+        /* Sword arm */
+        .sword-arm{position:absolute;top:38px;right:-30px;transform-origin:0 8px;transition:transform .15s ease}
+        .sword-grip{width:8px;height:20px;background:#5a3a1a;border-radius:2px;margin-left:12px}
+        .sword-guard{width:32px;height:6px;background:linear-gradient(90deg,#c0a030,#e0c040,#c0a030);border-radius:3px;margin-left:0;margin-top:-2px}
+        .sword-blade{width:6px;height:70px;background:linear-gradient(180deg,#fff,#d0d0e0,#a0a0b8);border-radius:2px 2px 1px 1px;margin-left:13px;margin-top:-2px;box-shadow:0 0 8px rgba(255,255,255,.3)}
 
-        /* Explosion particles */
-        .sparks{position:absolute;inset:0;pointer-events:none;z-index:4}
+        /* Shield */
+        .shield{position:absolute;top:40px;left:-10px;width:28px;height:36px;background:linear-gradient(135deg,#8888a0,#6a6a80);border-radius:4px 4px 4px 14px;border:2px solid #5a5a72}
+        .shield::after{content:'';position:absolute;top:8px;left:6px;width:14px;height:18px;background:linear-gradient(135deg,var(--orange),var(--red));border-radius:2px 2px 2px 8px;opacity:.8}
+
+        /* Knight animations */
+        .knight.idle{animation:knightBreathe 2s ease-in-out infinite}
+        @keyframes knightBreathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+
+        .knight.attack{animation:knightLunge .5s cubic-bezier(.16,1,.3,1)}
+        @keyframes knightLunge{
+            0%{transform:translateX(0) rotate(0)}
+            20%{transform:translateX(-20px) rotate(-5deg)}
+            50%{transform:translateX(120px) rotate(3deg)}
+            70%{transform:translateX(100px) rotate(0)}
+            100%{transform:translateX(0) rotate(0)}
+        }
+        .knight.attack .sword-arm{animation:swordSlash .5s ease}
+        @keyframes swordSlash{
+            0%{transform:rotate(0)}
+            20%{transform:rotate(-60deg)}
+            45%{transform:rotate(40deg)}
+            100%{transform:rotate(0)}
+        }
+
+        /* Slash effect */
+        .slash{position:absolute;pointer-events:none;z-index:5}
+        .slash-line{width:0;height:3px;background:linear-gradient(90deg,rgba(255,255,255,.9),var(--orange),transparent);border-radius:2px;position:absolute;transform-origin:left center;opacity:0}
+
+        /* Junk blocks */
+        .junk-zone{position:absolute;right:80px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:2;transition:all .3s}
+        .junk-block{padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;position:relative;transition:all .4s cubic-bezier(.16,1,.3,1)}
+        .junk-block:nth-child(odd){background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:var(--red);transform:translateX(10px)}
+        .junk-block:nth-child(even){background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);color:var(--orange);transform:translateX(-10px)}
+        .junk-block.hit{animation:junkExplode .5s ease-out forwards}
+        @keyframes junkExplode{
+            0%{transform:scale(1);opacity:1;filter:blur(0)}
+            30%{transform:scale(1.1);filter:brightness(2) blur(0)}
+            100%{transform:translateX(80px) scale(0) rotate(20deg);opacity:0;filter:blur(6px)}
+        }
+
+        /* Sparks */
+        .sparks{position:absolute;inset:0;pointer-events:none;z-index:6}
+        .spark{position:absolute;border-radius:50%;pointer-events:none}
+
+        /* Score counter */
+        .score{position:absolute;top:20px;right:24px;text-align:right;z-index:5}
+        .score-num{font-size:28px;font-weight:800;color:var(--orange);font-variant-numeric:tabular-nums}
+        .score-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
 
         /* Stats */
         .stats{padding:60px 32px;display:flex;justify-content:center;gap:80px}
@@ -111,15 +140,16 @@
         .cta>p{color:var(--text2);font-size:16px;margin-bottom:32px}
         .cta-m{font-size:11px;color:var(--text3);margin-top:14px}
 
-        /* Footer */
         footer{padding:24px 32px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
         footer p,footer a{font-size:11px;color:var(--text3);text-decoration:none}
 
         @media(max-width:768px){
             .fg{grid-template-columns:1fr}.stats{flex-direction:column;gap:28px}
             .hero-btns{flex-direction:column;align-items:center}
-            .arena-inner{height:300px}.machine-body{width:180px;height:120px}
-            .junk{right:10px}.n-right a:not(.btn){display:none}
+            .arena-inner{height:300px}
+            .knight{left:40px;transform:scale(.7)!important}
+            .junk-zone{right:20px}
+            .n-right a:not(.btn){display:none}
         }
     </style>
 </head>
@@ -150,39 +180,41 @@
 
 <section class="arena fade-up">
     <div class="arena-inner">
-        <div class="machine" id="machine">
-            <div class="machine-body">
-                <div class="machine-screen">
-                    <div class="machine-bar">
-                        <i style="background:#ff5f57"></i>
-                        <i style="background:#febc2e"></i>
-                        <i style="background:#28c840"></i>
-                    </div>
-                    <div class="machine-rows">
-                        <div class="machine-row"></div>
-                        <div class="machine-row"></div>
-                        <div class="machine-row"></div>
-                        <div class="machine-row"></div>
-                    </div>
+        <!-- Knight -->
+        <div class="knight idle" id="knight">
+            <div class="knight-body">
+                <div class="plume"></div>
+                <div class="helm"></div>
+                <div class="visor"></div>
+                <div class="torso"></div>
+                <div class="emblem"></div>
+                <div class="legs"><div class="leg"></div><div class="leg"></div></div>
+                <div class="shield"></div>
+                <div class="sword-arm">
+                    <div class="sword-grip"></div>
+                    <div class="sword-guard"></div>
+                    <div class="sword-blade"></div>
                 </div>
             </div>
-            <div class="machine-stand"></div>
         </div>
 
-        <div class="blast" id="blast">
-            <div class="blast-core" id="blastCore"></div>
-            <div class="blast-ring" id="blastRing"></div>
+        <!-- Junk targets -->
+        <div class="junk-zone" id="junkZone">
+            <div class="junk-block">Old DMGs &mdash; 4.2 GB</div>
+            <div class="junk-block">node_modules &mdash; 16 GB</div>
+            <div class="junk-block">Stale caches &mdash; 8.1 GB</div>
+            <div class="junk-block">Duplicates &mdash; 3.4 GB</div>
+            <div class="junk-block">Dead apps &mdash; 2.8 GB</div>
         </div>
 
-        <div class="junk" id="junk">
-            <div class="junk-item">Old DMGs &mdash; 4.2 GB</div>
-            <div class="junk-item">node_modules &mdash; 16 GB</div>
-            <div class="junk-item">Stale caches &mdash; 8.1 GB</div>
-            <div class="junk-item">Duplicates &mdash; 3.4 GB</div>
-            <div class="junk-item">Dead apps &mdash; 2.8 GB</div>
-        </div>
-
+        <!-- Effects -->
         <div class="sparks" id="sparks"></div>
+
+        <!-- Score -->
+        <div class="score">
+            <div class="score-num" id="scoreNum">0 GB</div>
+            <div class="score-label">Space Reclaimed</div>
+        </div>
     </div>
 </section>
 
@@ -248,94 +280,132 @@
 const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('vis')})},{threshold:.12});
 document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
 
-// Battle animation
-const arena=document.querySelector('.arena');
-const machine=document.getElementById('machine');
-const blastCore=document.getElementById('blastCore');
-const blastRing=document.getElementById('blastRing');
-const junk=document.getElementById('junk');
+// Battle system
+const knight=document.getElementById('knight');
+const junkZone=document.getElementById('junkZone');
 const sparksEl=document.getElementById('sparks');
-let firing=false;
+const scoreEl=document.getElementById('scoreNum');
+const arena=document.querySelector('.arena');
+let fighting=false;
+let totalReclaimed=0;
 
-function spark(x,y){
-    const s=document.createElement('div');
-    s.style.cssText=`position:absolute;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;border-radius:50%;left:${x}px;top:${y}px;pointer-events:none`;
-    s.style.background=Math.random()>.5?'#f97316':'#ef4444';
-    sparksEl.appendChild(s);
-    const a=Math.random()*Math.PI*2,d=40+Math.random()*80;
-    s.animate([
-        {opacity:1,transform:'scale(1) translate(0,0)',boxShadow:'0 0 6px #f97316'},
-        {opacity:0,transform:`scale(0) translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px)`,boxShadow:'0 0 0 transparent'}
-    ],{duration:500+Math.random()*300,easing:'ease-out'});
-    setTimeout(()=>s.remove(),800);
+const junkData=[
+    {text:'Old DMGs',size:4.2},{text:'node_modules',size:16},
+    {text:'Stale caches',size:8.1},{text:'Duplicates',size:3.4},
+    {text:'Dead apps',size:2.8},{text:'Temp files',size:1.2},
+    {text:'.DS_Store spam',size:0.8},{text:'Old logs',size:2.1},
+    {text:'Xcode junk',size:9.4},{text:'Broken symlinks',size:0.3},
+    {text:'Old backups',size:5.7},{text:'Zombie prefs',size:0.6},
+];
+
+function spark(x,y,count){
+    for(let i=0;i<count;i++){
+        const s=document.createElement('div');
+        s.className='spark';
+        const size=2+Math.random()*5;
+        const colors=['#f97316','#ef4444','#fbbf24','#fff'];
+        s.style.cssText=`width:${size}px;height:${size}px;left:${x}px;top:${y}px;background:${colors[Math.floor(Math.random()*colors.length)]}`;
+        sparksEl.appendChild(s);
+        const angle=Math.random()*Math.PI*2;
+        const dist=30+Math.random()*100;
+        const dur=400+Math.random()*400;
+        s.animate([
+            {opacity:1,transform:'scale(1) translate(0,0)',boxShadow:`0 0 ${size*2}px ${s.style.background}`},
+            {opacity:0,transform:`scale(0) translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px)`,boxShadow:'0 0 0 transparent'}
+        ],{duration:dur,easing:'ease-out'});
+        setTimeout(()=>s.remove(),dur);
+    }
 }
 
-function fire(){
-    if(firing)return;firing=true;
-    // Charge
-    machine.classList.add('charging');
-    machine.style.transform='translateX(-10px)';
+function slashEffect(x,y){
+    const slash=document.createElement('div');
+    slash.className='slash';
+    slash.style.cssText=`left:${x-40}px;top:${y}px`;
+    for(let i=0;i<3;i++){
+        const line=document.createElement('div');
+        line.className='slash-line';
+        line.style.transform=`rotate(${-30+i*30}deg)`;
+        slash.appendChild(line);
+        line.animate([
+            {width:'0px',opacity:1},
+            {width:'80px',opacity:.8},
+            {width:'120px',opacity:0}
+        ],{duration:250,delay:i*50,easing:'ease-out',fill:'forwards'});
+    }
+    sparksEl.appendChild(slash);
+    setTimeout(()=>slash.remove(),400);
+}
+
+function attack(){
+    if(fighting)return;
+    const blocks=junkZone.querySelectorAll('.junk-block:not(.hit)');
+    if(blocks.length===0)return;
+    fighting=true;
+
+    // Pick target
+    const target=blocks[Math.floor(Math.random()*blocks.length)];
+
+    // Knight attacks
+    knight.classList.remove('idle');
+    knight.classList.add('attack');
+
+    // Impact timing
     setTimeout(()=>{
-        // Fire
-        machine.style.transform='translateX(20px)';
-        blastCore.classList.add('fire');
-        blastRing.classList.add('fire');
+        // Slash effect at target
+        const tr=target.getBoundingClientRect();
+        const ar=arena.getBoundingClientRect();
+        slashEffect(tr.left-ar.left,tr.top-ar.top+tr.height/2);
+        spark(tr.left-ar.left+20,tr.top-ar.top+tr.height/2,12);
+
+        // Explode target
+        target.classList.add('hit');
+
+        // Update score
+        const sizeMatch=target.textContent.match(/([\d.]+)\s*GB/);
+        if(sizeMatch)totalReclaimed+=parseFloat(sizeMatch[1]);
+        scoreEl.textContent=totalReclaimed.toFixed(1)+' GB';
+        scoreEl.animate([
+            {transform:'scale(1.3)',color:'#fff'},
+            {transform:'scale(1)',color:'#f97316'}
+        ],{duration:300});
+
+        // Respawn after removal
         setTimeout(()=>{
-            // Impact
-            junk.classList.add('hit');
-            const r=junk.getBoundingClientRect();
-            const ar=arena.getBoundingClientRect();
-            for(let i=0;i<14;i++)spark(r.left-ar.left+Math.random()*120,r.top-ar.top+Math.random()*100);
-            // Remove a junk item
-            const items=junk.querySelectorAll('.junk-item');
-            if(items.length>0){
-                const target=items[Math.floor(Math.random()*items.length)];
-                target.animate([
-                    {opacity:1,transform:target.style.transform||'translateX(0)'},
-                    {opacity:0,transform:'translateX(100px) scale(0)',filter:'blur(4px)'}
-                ],{duration:400,easing:'ease-in'});
-                setTimeout(()=>{
-                    target.remove();
-                    // Respawn after a while
-                    setTimeout(()=>{
-                        const texts=['Old DMGs \u2014 4.2 GB','node_modules \u2014 16 GB','Stale caches \u2014 8 GB','Duplicates \u2014 3 GB','Dead apps \u2014 2.8 GB','Temp files \u2014 1.2 GB','.DS_Store \u2014 847 files'];
-                        const el=document.createElement('div');
-                        el.className='junk-item';
-                        el.textContent=texts[Math.floor(Math.random()*texts.length)];
-                        el.style.opacity='0';
-                        junk.appendChild(el);
-                        requestAnimationFrame(()=>el.style.opacity='1');
-                    },2000);
-                },400);
-            }
-        },150);
-        setTimeout(()=>{
-            blastCore.classList.remove('fire');
-            blastRing.classList.remove('fire');
-            machine.classList.remove('charging');
-            machine.style.transform='';
-            junk.classList.remove('hit');
-            firing=false;
-        },600);
-    },200);
+            target.remove();
+            setTimeout(()=>{
+                const d=junkData[Math.floor(Math.random()*junkData.length)];
+                const el=document.createElement('div');
+                el.className='junk-block';
+                el.textContent=`${d.text} \u2014 ${d.size} GB`;
+                el.style.opacity='0';el.style.transform='translateX(40px)';
+                junkZone.appendChild(el);
+                requestAnimationFrame(()=>{el.style.opacity='1';el.style.transform='';});
+            },800);
+        },500);
+    },250);
+
+    // Reset knight
+    setTimeout(()=>{
+        knight.classList.remove('attack');
+        knight.classList.add('idle');
+        fighting=false;
+    },600);
 }
 
-// Fire on scroll
+// Attack on scroll
 let lastScroll=0;
 window.addEventListener('scroll',()=>{
     const now=Date.now();
-    if(now-lastScroll<1200)return;
+    if(now-lastScroll<900)return;
     const r=arena.getBoundingClientRect();
-    if(r.top<window.innerHeight*.8&&r.bottom>0){lastScroll=now;fire();}
+    if(r.top<window.innerHeight*.85&&r.bottom>100){lastScroll=now;attack();}
 },{passive:true});
 
-// Auto-fire periodically when visible
+// Auto-attack when visible
 setInterval(()=>{
     const r=arena.getBoundingClientRect();
-    if(r.top<window.innerHeight&&r.bottom>0)fire();
-},3000);
-
-// No counter needed — stats are static
+    if(r.top<window.innerHeight&&r.bottom>0)attack();
+},2500);
 </script>
 </body>
 </html>
