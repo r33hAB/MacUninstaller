@@ -56,8 +56,8 @@ final class UninstallService {
         // Create access control requiring Touch ID
         guard let access = SecAccessControlCreateWithFlags(
             nil,
-            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            .biometryCurrentSet,
+            kSecAttrAccessibleWhenUnlocked,
+            .userPresence,
             nil
         ) else { return }
 
@@ -67,8 +67,7 @@ final class UninstallService {
             kSecAttrAccount as String: Self.keychainAccount,
             kSecValueData as String: password.data(using: .utf8)!,
             kSecAttrAccessControl as String: access,
-            kSecUseDataProtectionKeychain as String: true,
-        ]
+                    ]
         let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
         print("Keychain save status: \(addStatus) (\(addStatus == errSecSuccess ? "SUCCESS" : "FAILED"))")
     }
@@ -85,8 +84,7 @@ final class UninstallService {
             kSecReturnData as String: true,
             kSecUseAuthenticationContext as String: context,
             kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecUseDataProtectionKeychain as String: true,
-        ]
+                    ]
 
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
@@ -106,8 +104,7 @@ final class UninstallService {
             kSecAttrService as String: Self.keychainService,
             kSecAttrAccount as String: Self.keychainAccount,
             kSecUseAuthenticationUI as String: kSecUseAuthenticationUISkip,
-            kSecUseDataProtectionKeychain as String: true,
-        ]
+                    ]
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         return status == errSecInteractionNotAllowed || status == errSecSuccess
