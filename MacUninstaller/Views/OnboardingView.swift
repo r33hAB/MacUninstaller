@@ -9,13 +9,10 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             // Header
             VStack(spacing: 12) {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(AppTheme.primaryGradient)
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
                     .frame(width: 64, height: 64)
-                    .overlay(
-                        Text("\u{26A1}")
-                            .font(.system(size: 30))
-                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
                     .padding(.top, 28)
 
                 Text("Welcome to MacUninstaller")

@@ -102,7 +102,7 @@ final class UninstallService {
             // Try user-level first
             do {
                 if useTrash {
-                    try trashItem(at: path)
+                    try await trashItem(at: path)
                 } else {
                     try fileManager.removeItem(at: path)
                 }
@@ -144,16 +144,21 @@ final class UninstallService {
         )
     }
 
-    private func trashItem(at url: URL) throws {
-        // Try NSWorkspace.recycle first — works with App Management permission
-        var recycleError: Error?
-        let semaphore = DispatchSemaphore(value: 0)
-        NSWorkspace.shared.recycle([url]) { _, error in
-            recycleError = error
-            semaphore.signal()
-        }
-        semaphore.wait()
-        if let error = recycleError {
+    private func trashItem(at url: URL) async throws {
+        // Try NSWorkspace.recycle first — respects App Management permission
+        do {
+            try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+                DispatchQueue.main.async {
+                    NSWorkspace.shared.recycle([url]) { _, error in
+                        if let error {
+                            cont.resume(throwing: error)
+                        } else {
+                            cont.resume()
+                        }
+                    }
+                }
+            }
+        } catch {
             // Fallback to FileManager
             var resultingURL: NSURL?
             try fileManager.trashItem(at: url, resultingItemURL: &resultingURL)

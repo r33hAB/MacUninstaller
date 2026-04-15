@@ -9,13 +9,10 @@ struct DashboardView: View {
         VStack(spacing: 0) {
             // Title bar
             HStack(spacing: 12) {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(AppTheme.primaryGradient)
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
                     .frame(width: 24, height: 24)
-                    .overlay(
-                        Text("⚡")
-                            .font(.system(size: 12))
-                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
 
                 Text("MacUninstaller")
                     .font(.system(size: 14, weight: .bold))
