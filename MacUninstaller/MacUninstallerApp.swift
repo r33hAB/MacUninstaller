@@ -1,15 +1,18 @@
 import SwiftUI
 
-@main
-struct MacUninstallerApp: App {
-    @StateObject private var appState = AppState()
-    private let serviceHandler = ServiceHandler()
+class AppDelegate: NSObject, NSApplicationDelegate {
+    let serviceHandler = ServiceHandler()
 
-    init() {
-        // Register the Services menu handler for right-click uninstall
+    func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.servicesProvider = serviceHandler
         NSUpdateDynamicServices()
     }
+}
+
+@main
+struct MacUninstallerApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var appState = AppState()
 
     var body: some Scene {
         WindowGroup {
