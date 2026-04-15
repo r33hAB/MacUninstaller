@@ -187,8 +187,8 @@
 </section>
 
 <div class="stats fade-up">
-    <div class="stat"><div class="stat-n" id="sGb">0</div><div class="stat-l">GB recovered, guaranteed</div></div>
-    <div class="stat"><div class="stat-n" id="sFiles">0</div><div class="stat-l">junk files found per scan</div></div>
+    <div class="stat"><div class="stat-n">&#10003;</div><div class="stat-l">Results guaranteed</div></div>
+    <div class="stat"><div class="stat-n">0</div><div class="stat-l">data collected</div></div>
     <div class="stat"><div class="stat-n">100%</div><div class="stat-l">free &amp; open source</div></div>
 </div>
 
@@ -335,13 +335,7 @@ setInterval(()=>{
     if(r.top<window.innerHeight&&r.bottom>0)fire();
 },3000);
 
-// Counter animation
-function counter(el,target,suffix=''){
-    let c=0;const step=target/50;
-    const t=setInterval(()=>{c+=step;if(c>=target){c=target;clearInterval(t)}el.textContent=Math.floor(c)+suffix},25);
-}
-const sObs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){counter(document.getElementById('sGb'),34,'+');counter(document.getElementById('sFiles'),2847,'+');sObs.disconnect()}})},{threshold:.5});
-sObs.observe(document.querySelector('.stats'));
+// No counter needed — stats are static
 </script>
 </body>
 </html>
