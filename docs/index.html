@@ -5,359 +5,237 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MacUninstaller — Clean Your Mac</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --bg: #060608;
-            --bg2: #0d0d12;
-            --card: #13131a;
-            --border: #1e1e2a;
-            --text: #eeeef0;
-            --text2: #8888a0;
-            --text3: #55556a;
-            --orange: #f97316;
-            --red: #ef4444;
-            --blue: #667eea;
-            --purple: #8b5cf6;
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#050507;--bg2:#0b0b10;--card:#111118;--border:#1a1a25;
+            --text:#f0f0f3;--text2:#8585a0;--text3:#4a4a62;
+            --orange:#f97316;--red:#ef4444;--purple:#8b5cf6;--blue:#667eea;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            overflow-x: hidden;
-        }
-        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-        .reveal.visible { opacity: 1; transform: translateY(0); }
+        body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
 
-        /* NAV */
-        nav {
-            position: fixed; top: 0; width: 100%; z-index: 100;
-            padding: 14px 40px;
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(6,6,8,0.8); backdrop-filter: blur(24px);
-            border-bottom: 1px solid rgba(30,30,42,0.5);
-        }
-        .nav-brand { display: flex; align-items: center; gap: 10px; }
-        .nav-logo {
-            width: 30px; height: 30px; border-radius: 8px;
-            background: linear-gradient(135deg, var(--orange), var(--red));
-            display: flex; align-items: center; justify-content: center; font-size: 15px;
-        }
-        .nav-title { font-size: 15px; font-weight: 700; }
-        .nav-right { display: flex; gap: 24px; align-items: center; }
-        .nav-right a { color: var(--text2); text-decoration: none; font-size: 13px; transition: color 0.2s; }
-        .nav-right a:hover { color: var(--text); }
-        .btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 600;
-            text-decoration: none; transition: all 0.3s; cursor: pointer; border: none;
-        }
-        .btn-primary { background: linear-gradient(135deg, var(--orange), var(--red)); color: white; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(249,115,22,0.3); }
-        .btn-ghost { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); }
-        .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+        /* Animations */
+        .fade-up{opacity:0;transform:translateY(50px);transition:all 1s cubic-bezier(.16,1,.3,1)}
+        .fade-up.vis{opacity:1;transform:translateY(0)}
+        .fade-up.vis:nth-child(2){transition-delay:.1s}
+        .fade-up.vis:nth-child(3){transition-delay:.2s}
+        .fade-up.vis:nth-child(4){transition-delay:.3s}
+        .fade-up.vis:nth-child(5){transition-delay:.4s}
+        .fade-up.vis:nth-child(6){transition-delay:.5s}
 
-        /* HERO */
-        .hero {
-            min-height: 100vh; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center;
-            padding: 120px 40px 60px; position: relative;
-        }
-        .hero-glow {
-            position: absolute; top: 30%; left: 50%; transform: translate(-50%,-50%);
-            width: 700px; height: 500px;
-            background: radial-gradient(ellipse, rgba(249,115,22,0.12) 0%, rgba(239,68,68,0.05) 40%, transparent 70%);
-            pointer-events: none; filter: blur(40px);
-        }
-        .hero-tag {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 500;
-            background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.2);
-            color: var(--orange); margin-bottom: 28px;
-        }
-        .hero h1 { font-size: 72px; font-weight: 800; line-height: 1.05; letter-spacing: -3px; margin-bottom: 24px; }
-        .hero h1 .grad {
-            background: linear-gradient(135deg, var(--orange), var(--red), var(--purple));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-size: 200% 200%; animation: gradShift 4s ease infinite;
-        }
-        @keyframes gradShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
-        .hero p { font-size: 19px; color: var(--text2); max-width: 540px; line-height: 1.6; margin-bottom: 40px; }
-        .hero-btns { display: flex; gap: 12px; margin-bottom: 16px; }
-        .hero-meta { font-size: 12px; color: var(--text3); }
+        /* Nav */
+        nav{position:fixed;top:0;width:100%;z-index:100;padding:12px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,5,7,.75);backdrop-filter:blur(30px);border-bottom:1px solid rgba(26,26,37,.5)}
+        .n-brand{display:flex;align-items:center;gap:10px}
+        .n-logo{width:32px;height:32px;border-radius:8px;object-fit:cover}
+        .n-title{font-size:15px;font-weight:700;letter-spacing:-.3px}
+        .n-right{display:flex;gap:20px;align-items:center}
+        .n-right a{color:var(--text2);text-decoration:none;font-size:13px;font-weight:500;transition:color .2s}
+        .n-right a:hover{color:var(--text)}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:all .3s}
+        .btn-p{background:linear-gradient(135deg,var(--orange),var(--red));color:#fff}
+        .btn-p:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(249,115,22,.35)}
+        .btn-g{background:rgba(255,255,255,.04);color:var(--text);border:1px solid var(--border)}
+        .btn-g:hover{background:rgba(255,255,255,.08);border-color:var(--text3)}
 
-        /* BATTLE SCENE */
-        .battle {
-            padding: 80px 40px; position: relative; overflow: hidden;
-        }
-        .battle-inner {
-            max-width: 900px; margin: 0 auto; position: relative; height: 400px;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .laptop {
-            position: relative; z-index: 2;
-            width: 280px; height: 180px;
-            background: linear-gradient(135deg, #2a2a3a, #1a1a2a);
-            border-radius: 12px; border: 2px solid #3a3a4a;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
-        }
-        .laptop.fighting { animation: laptopPunch 0.6s ease; }
-        @keyframes laptopPunch {
-            0% { transform: translateX(0) rotate(0); }
-            30% { transform: translateX(40px) rotate(3deg); }
-            60% { transform: translateX(-5px) rotate(-1deg); }
-            100% { transform: translateX(0) rotate(0); }
-        }
-        .laptop-screen {
-            width: 240px; height: 140px; border-radius: 6px; overflow: hidden;
-            background: var(--bg); display: flex; flex-direction: column;
-        }
-        .laptop-bar {
-            height: 12px; display: flex; gap: 1px; padding: 3px 6px; background: #111;
-        }
-        .laptop-bar span { width: 6px; height: 6px; border-radius: 50%; }
-        .laptop-content { flex: 1; padding: 6px; display: flex; flex-direction: column; gap: 3px; }
-        .laptop-row {
-            height: 10px; border-radius: 3px; background: var(--card);
-            display: flex; align-items: center; gap: 4px; padding: 0 4px;
-        }
-        .laptop-row .dot { width: 4px; height: 4px; border-radius: 50%; }
-        .laptop-base {
-            width: 320px; height: 8px; margin: -2px auto 0;
-            background: linear-gradient(to bottom, #3a3a4a, #2a2a3a);
-            border-radius: 0 0 4px 4px;
-        }
+        /* Hero */
+        .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:140px 32px 80px;position:relative}
+        .hero-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.15);color:var(--orange);margin-bottom:24px;text-transform:uppercase;letter-spacing:.5px}
+        .hero h1{font-size:clamp(40px,7vw,76px);font-weight:800;line-height:1.05;letter-spacing:-3px;margin-bottom:20px}
+        .hero h1 .gr{background:linear-gradient(135deg,var(--orange),var(--red),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% 200%;animation:grShift 5s ease infinite}
+        @keyframes grShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+        .hero p{font-size:18px;color:var(--text2);max-width:520px;line-height:1.6;margin-bottom:36px}
+        .hero-btns{display:flex;gap:12px;margin-bottom:14px}
+        .hero-meta{font-size:11px;color:var(--text3)}
 
-        .trash-pile {
-            position: absolute; right: 80px; z-index: 1;
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
-            transition: all 0.6s cubic-bezier(0.16,1,0.3,1);
-        }
-        .trash-pile.hit { transform: translateX(60px) rotate(15deg) scale(0.9); opacity: 0.6; }
-        .trash-item {
-            padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600;
-            background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
-            color: var(--red); white-space: nowrap;
-            animation: trashFloat 3s ease-in-out infinite;
-        }
-        .trash-item:nth-child(2) { animation-delay: 0.5s; transform: translateX(20px); }
-        .trash-item:nth-child(3) { animation-delay: 1s; transform: translateX(-10px); }
-        .trash-item:nth-child(4) { animation-delay: 1.5s; transform: translateX(30px); }
-        .trash-item:nth-child(5) { animation-delay: 2s; transform: translateX(5px); }
-        @keyframes trashFloat {
-            0%,100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
+        /* Battle Arena */
+        .arena{padding:40px 32px 80px;position:relative}
+        .arena-inner{max-width:900px;margin:0 auto;height:420px;position:relative;display:flex;align-items:center;justify-content:center}
 
-        .energy-beam {
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
-            width: 0; height: 4px; border-radius: 2px;
-            background: linear-gradient(90deg, var(--orange), var(--red), transparent);
-            z-index: 3; opacity: 0;
-            transition: width 0.3s, opacity 0.2s;
-        }
-        .energy-beam.active { width: 200px; opacity: 1; }
+        .machine{position:relative;z-index:2;transition:transform .4s cubic-bezier(.16,1,.3,1)}
+        .machine-body{width:260px;height:170px;background:linear-gradient(145deg,#1e1e2e,#14141f);border-radius:14px;border:1.5px solid #2e2e42;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 0 rgba(249,115,22,0),0 20px 50px rgba(0,0,0,.6);transition:box-shadow .3s}
+        .machine.charging .machine-body{box-shadow:0 0 60px 10px rgba(249,115,22,.2),0 20px 50px rgba(0,0,0,.6)}
+        .machine-screen{width:224px;height:134px;border-radius:8px;background:var(--bg);overflow:hidden}
+        .machine-bar{height:10px;display:flex;gap:4px;padding:3px 6px;background:#0a0a10}
+        .machine-bar i{width:5px;height:5px;border-radius:50%;display:block}
+        .machine-rows{padding:6px;display:flex;flex-direction:column;gap:3px}
+        .machine-row{height:8px;border-radius:3px;background:var(--card);position:relative;overflow:hidden}
+        .machine-row::after{content:'';position:absolute;left:-100%;top:0;height:100%;width:50%;background:linear-gradient(90deg,transparent,rgba(249,115,22,.3),transparent);animation:scanLine 2s ease-in-out infinite}
+        .machine-row:nth-child(2)::after{animation-delay:.3s}
+        .machine-row:nth-child(3)::after{animation-delay:.6s}
+        @keyframes scanLine{0%{left:-100%}100%{left:200%}}
+        .machine-stand{width:300px;height:6px;margin:-1px auto 0;background:linear-gradient(to bottom,#2e2e42,#1e1e2e);border-radius:0 0 4px 4px}
 
-        .particles {
-            position: absolute; inset: 0; pointer-events: none; z-index: 4;
-        }
-        .particle {
-            position: absolute; width: 4px; height: 4px; border-radius: 50%;
-            background: var(--orange); opacity: 0;
-        }
+        /* Energy blast */
+        .blast{position:absolute;left:50%;top:50%;transform:translate(-20%,-50%);z-index:3;pointer-events:none}
+        .blast-core{width:0;height:6px;border-radius:3px;background:linear-gradient(90deg,#fff,var(--orange),var(--red),transparent);opacity:0;transition:width .15s,opacity .1s;box-shadow:0 0 20px var(--orange),0 0 40px rgba(249,115,22,.3)}
+        .blast-core.fire{width:250px;opacity:1}
+        .blast-ring{position:absolute;right:-20px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:2px solid var(--orange);opacity:0;transition:all .3s}
+        .blast-ring.fire{opacity:.6;transform:translateY(-50%) scale(2);border-color:transparent}
 
-        .battle-text {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            font-size: 13px; color: var(--text3); text-align: center;
-        }
+        /* Junk targets */
+        .junk{position:absolute;right:60px;top:50%;transform:translateY(-50%);z-index:1;display:flex;flex-direction:column;gap:6px;transition:all .4s cubic-bezier(.16,1,.3,1)}
+        .junk.hit{transform:translateY(-50%) translateX(80px) scale(.85);opacity:.4;filter:blur(2px)}
+        .junk-item{padding:6px 16px;border-radius:8px;font-size:11px;font-weight:600;white-space:nowrap;position:relative;overflow:hidden;transition:all .3s}
+        .junk-item:nth-child(odd){background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
+        .junk-item:nth-child(even){background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);color:var(--orange)}
+        .junk-item:nth-child(1){transform:translateX(10px)}
+        .junk-item:nth-child(2){transform:translateX(-15px)}
+        .junk-item:nth-child(3){transform:translateX(25px)}
+        .junk-item:nth-child(4){transform:translateX(-5px)}
+        .junk-item:nth-child(5){transform:translateX(15px)}
 
-        /* FEATURES */
-        .features { padding: 100px 40px; max-width: 1100px; margin: 0 auto; }
-        .section-header { text-align: center; margin-bottom: 60px; }
-        .section-header h2 { font-size: 44px; font-weight: 800; letter-spacing: -2px; margin-bottom: 12px; }
-        .section-header p { color: var(--text2); font-size: 17px; }
+        /* Explosion particles */
+        .sparks{position:absolute;inset:0;pointer-events:none;z-index:4}
 
-        .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
-        .f-card {
-            padding: 32px; background: var(--card); border-radius: 16px;
-            border: 1px solid var(--border); transition: all 0.4s;
-            position: relative; overflow: hidden;
-        }
-        .f-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--orange), transparent);
-            opacity: 0; transition: opacity 0.4s;
-        }
-        .f-card:hover { border-color: rgba(249,115,22,0.3); transform: translateY(-4px); }
-        .f-card:hover::before { opacity: 1; }
-        .f-icon {
-            width: 44px; height: 44px; border-radius: 12px; margin-bottom: 18px;
-            display: flex; align-items: center; justify-content: center; font-size: 22px;
-        }
-        .f-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-        .f-card p { font-size: 13px; color: var(--text2); line-height: 1.6; }
+        /* Stats */
+        .stats{padding:60px 32px;display:flex;justify-content:center;gap:80px}
+        .stat{text-align:center}
+        .stat-n{font-size:52px;font-weight:800;background:linear-gradient(135deg,var(--orange),var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .stat-l{font-size:13px;color:var(--text2);margin-top:4px}
 
-        /* STATS */
-        .stats {
-            padding: 60px 40px;
-            display: flex; justify-content: center; gap: 80px;
-        }
-        .stat { text-align: center; }
-        .stat-num {
-            font-size: 48px; font-weight: 800;
-            background: linear-gradient(135deg, var(--orange), var(--red));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .stat-label { font-size: 13px; color: var(--text2); margin-top: 4px; }
+        /* Features */
+        .features{padding:100px 32px;max-width:1100px;margin:0 auto}
+        .sh{text-align:center;margin-bottom:56px}
+        .sh h2{font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-2px;margin-bottom:10px}
+        .sh p{color:var(--text2);font-size:16px}
+        .fg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+        .fc{padding:28px;background:var(--card);border-radius:14px;border:1px solid var(--border);transition:all .4s;position:relative;overflow:hidden}
+        .fc::after{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),transparent);opacity:0;transition:opacity .4s}
+        .fc:hover{border-color:rgba(249,115,22,.25);transform:translateY(-6px)}.fc:hover::after{opacity:1}
+        .fi{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px}
+        .fc h3{font-size:15px;font-weight:700;margin-bottom:6px}
+        .fc p{font-size:13px;color:var(--text2);line-height:1.6}
 
         /* CTA */
-        .cta {
-            padding: 120px 40px; text-align: center;
-            position: relative;
-        }
-        .cta-glow {
-            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 600px; height: 300px;
-            background: radial-gradient(ellipse, rgba(249,115,22,0.08), transparent 70%);
-            pointer-events: none;
-        }
-        .cta h2 { font-size: 52px; font-weight: 800; letter-spacing: -2px; margin-bottom: 16px; }
-        .cta p { color: var(--text2); font-size: 17px; margin-bottom: 36px; }
-        .cta-meta { font-size: 12px; color: var(--text3); margin-top: 16px; }
+        .cta{padding:120px 32px;text-align:center}
+        .cta h2{font-size:clamp(32px,5vw,52px);font-weight:800;letter-spacing:-2px;margin-bottom:14px}
+        .cta>p{color:var(--text2);font-size:16px;margin-bottom:32px}
+        .cta-m{font-size:11px;color:var(--text3);margin-top:14px}
 
-        /* FOOTER */
-        footer {
-            padding: 28px 40px; border-top: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        footer p, footer a { font-size: 12px; color: var(--text3); text-decoration: none; }
-        footer a:hover { color: var(--text2); }
+        /* Footer */
+        footer{padding:24px 32px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        footer p,footer a{font-size:11px;color:var(--text3);text-decoration:none}
 
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 38px; letter-spacing: -1px; }
-            .features-grid { grid-template-columns: 1fr; }
-            .stats { flex-direction: column; gap: 32px; }
-            .hero-btns { flex-direction: column; align-items: center; }
-            .battle-inner { height: 300px; }
-            .laptop { width: 200px; height: 130px; }
-            .trash-pile { right: 20px; }
-            nav { padding: 12px 20px; }
-            .nav-right a:not(.btn) { display: none; }
+        @media(max-width:768px){
+            .fg{grid-template-columns:1fr}.stats{flex-direction:column;gap:28px}
+            .hero-btns{flex-direction:column;align-items:center}
+            .arena-inner{height:300px}.machine-body{width:180px;height:120px}
+            .junk{right:10px}.n-right a:not(.btn){display:none}
         }
     </style>
 </head>
 <body>
 
 <nav>
-    <div class="nav-brand">
-        <div class="nav-logo">&#9889;</div>
-        <span class="nav-title">MacUninstaller</span>
+    <div class="n-brand">
+        <img src="logo.jpg" class="n-logo" alt="MacUninstaller">
+        <span class="n-title">MacUninstaller</span>
     </div>
-    <div class="nav-right">
+    <div class="n-right">
         <a href="#features">Features</a>
         <a href="https://github.com/r33hAB/MacUninstaller">GitHub</a>
-        <a href="https://github.com/r33hAB/MacUninstaller/releases/latest" class="btn btn-primary">Download</a>
+        <a href="https://github.com/r33hAB/MacUninstaller/releases/latest" class="btn btn-p">Download</a>
     </div>
 </nav>
 
 <section class="hero">
-    <div class="hero-glow"></div>
-    <div class="hero-tag">&#9889; Free &amp; Open Source</div>
-    <h1>Clean your Mac.<br><span class="grad">Destroy the junk.</span></h1>
+    <div class="hero-tag">Free &amp; Open Source</div>
+    <h1>Clean your Mac.<br><span class="gr">Destroy the junk.</span></h1>
     <p>Uninstall apps completely, analyze storage, and reclaim disk space with intelligent cleanup. Native. Fast. No subscriptions.</p>
     <div class="hero-btns">
-        <a href="https://github.com/r33hAB/MacUninstaller/releases/latest" class="btn btn-primary">&#8595; Download for macOS</a>
-        <a href="https://github.com/r33hAB/MacUninstaller" class="btn btn-ghost">View Source</a>
+        <a href="https://github.com/r33hAB/MacUninstaller/releases/latest" class="btn btn-p">&#8595; Download for macOS</a>
+        <a href="https://github.com/r33hAB/MacUninstaller" class="btn btn-g">View Source</a>
     </div>
     <p class="hero-meta">macOS 14.0+ &bull; Universal Binary</p>
 </section>
 
-<section class="battle reveal">
-    <div class="battle-inner">
-        <div class="laptop" id="laptop">
-            <div class="laptop-screen">
-                <div class="laptop-bar">
-                    <span style="background:#ff5f57"></span>
-                    <span style="background:#febc2e"></span>
-                    <span style="background:#28c840"></span>
-                </div>
-                <div class="laptop-content">
-                    <div class="laptop-row"><div class="dot" style="background:var(--orange)"></div></div>
-                    <div class="laptop-row"><div class="dot" style="background:var(--blue)"></div></div>
-                    <div class="laptop-row"><div class="dot" style="background:var(--purple)"></div></div>
-                    <div class="laptop-row"><div class="dot" style="background:#22c55e"></div></div>
+<section class="arena fade-up">
+    <div class="arena-inner">
+        <div class="machine" id="machine">
+            <div class="machine-body">
+                <div class="machine-screen">
+                    <div class="machine-bar">
+                        <i style="background:#ff5f57"></i>
+                        <i style="background:#febc2e"></i>
+                        <i style="background:#28c840"></i>
+                    </div>
+                    <div class="machine-rows">
+                        <div class="machine-row"></div>
+                        <div class="machine-row"></div>
+                        <div class="machine-row"></div>
+                        <div class="machine-row"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="laptop-base"></div>
-
-        <div class="energy-beam" id="beam"></div>
-
-        <div class="trash-pile" id="trash">
-            <div class="trash-item">Old DMGs &mdash; 4.2 GB</div>
-            <div class="trash-item">node_modules &mdash; 16 GB</div>
-            <div class="trash-item">Stale caches &mdash; 8.1 GB</div>
-            <div class="trash-item">Duplicate files &mdash; 3.4 GB</div>
-            <div class="trash-item">Broken apps &mdash; 2.8 GB</div>
+            <div class="machine-stand"></div>
         </div>
 
-        <div class="particles" id="particles"></div>
-        <div class="battle-text">Scroll to watch your Mac fight back &#8595;</div>
+        <div class="blast" id="blast">
+            <div class="blast-core" id="blastCore"></div>
+            <div class="blast-ring" id="blastRing"></div>
+        </div>
+
+        <div class="junk" id="junk">
+            <div class="junk-item">Old DMGs &mdash; 4.2 GB</div>
+            <div class="junk-item">node_modules &mdash; 16 GB</div>
+            <div class="junk-item">Stale caches &mdash; 8.1 GB</div>
+            <div class="junk-item">Duplicates &mdash; 3.4 GB</div>
+            <div class="junk-item">Dead apps &mdash; 2.8 GB</div>
+        </div>
+
+        <div class="sparks" id="sparks"></div>
     </div>
 </section>
 
-<div class="stats reveal">
-    <div class="stat"><div class="stat-num" id="statGb">0</div><div class="stat-label">GB reclaimable on average</div></div>
-    <div class="stat"><div class="stat-num" id="statFiles">0</div><div class="stat-label">junk files detected</div></div>
-    <div class="stat"><div class="stat-num">100%</div><div class="stat-label">free &amp; open source</div></div>
+<div class="stats fade-up">
+    <div class="stat"><div class="stat-n" id="sGb">0</div><div class="stat-l">GB recovered, guaranteed</div></div>
+    <div class="stat"><div class="stat-n" id="sFiles">0</div><div class="stat-l">junk files found per scan</div></div>
+    <div class="stat"><div class="stat-n">100%</div><div class="stat-l">free &amp; open source</div></div>
 </div>
 
-<section class="features reveal" id="features">
-    <div class="section-header">
+<section class="features fade-up" id="features">
+    <div class="sh">
         <h2>Built different.</h2>
         <p>Not another Electron wrapper. Pure native macOS, built with SwiftUI.</p>
     </div>
-    <div class="features-grid">
-        <div class="f-card reveal">
-            <div class="f-icon" style="background:rgba(249,115,22,0.12)">&#128465;</div>
+    <div class="fg">
+        <div class="fc fade-up">
+            <div class="fi" style="background:rgba(249,115,22,.1)">&#128465;</div>
             <h3>Deep Uninstall</h3>
-            <p>Removes apps and every trace they left — caches, preferences, support files, launch agents. Nothing survives.</p>
+            <p>Removes apps and every trace — caches, preferences, support files, launch agents. Nothing survives.</p>
         </div>
-        <div class="f-card reveal">
-            <div class="f-icon" style="background:rgba(102,126,234,0.12)">&#128202;</div>
+        <div class="fc fade-up">
+            <div class="fi" style="background:rgba(102,126,234,.1)">&#128202;</div>
             <h3>Storage Map</h3>
             <p>Visual disk breakdown by category. See where your space went. Browse by folder, type, or age.</p>
         </div>
-        <div class="f-card reveal">
-            <div class="f-icon" style="background:rgba(139,92,246,0.12)">&#10024;</div>
+        <div class="fc fade-up">
+            <div class="fi" style="background:rgba(139,92,246,.1)">&#10024;</div>
             <h3>Smart Suggestions</h3>
-            <p>Detects old installers, duplicates, stale downloads, bloated caches, and dev artifacts. One-click cleanup.</p>
+            <p>Detects old installers, duplicates, stale downloads, bloated caches, and dev artifacts automatically.</p>
         </div>
-        <div class="f-card reveal">
-            <div class="f-icon" style="background:rgba(34,197,94,0.12)">&#128274;</div>
-            <h3>Touch ID Auth</h3>
-            <p>Authenticate once per session. Cached authorization for admin operations. No repeated password prompts.</p>
+        <div class="fc fade-up">
+            <div class="fi" style="background:rgba(34,197,94,.1)">&#128274;</div>
+            <h3>Touch ID</h3>
+            <p>Authenticate once per session. Cached authorization for admin operations. No repeated prompts.</p>
         </div>
-        <div class="f-card reveal">
-            <div class="f-icon" style="background:rgba(236,72,153,0.12)">&#128736;</div>
+        <div class="fc fade-up">
+            <div class="fi" style="background:rgba(236,72,153,.1)">&#128736;</div>
             <h3>Dev-Aware</h3>
             <p>Finds node_modules, DerivedData, Pods, venv, .build across all your projects. Safely reclaimable.</p>
         </div>
-        <div class="f-card reveal">
-            <div class="f-icon" style="background:rgba(59,130,246,0.12)">&#128270;</div>
+        <div class="fc fade-up">
+            <div class="fi" style="background:rgba(59,130,246,.1)">&#128270;</div>
             <h3>Finder Menu</h3>
-            <p>Right-click any .app in Finder &rarr; "Uninstall with MacUninstaller". Instant access from anywhere.</p>
+            <p>Right-click any .app in Finder to uninstall. No need to open the app first.</p>
         </div>
     </div>
 </section>
 
-<section class="cta reveal">
-    <div class="cta-glow"></div>
+<section class="cta fade-up">
     <h2>Your Mac deserves better.</h2>
     <p>Free. Open source. No telemetry. No subscriptions. Just a clean machine.</p>
-    <a href="https://github.com/r33hAB/MacUninstaller/releases/latest" class="btn btn-primary">&#8595; Download MacUninstaller</a>
-    <p class="cta-meta">v1.0 &bull; macOS 14.0+ &bull; ~5 MB</p>
+    <a href="https://github.com/r33hAB/MacUninstaller/releases/latest" class="btn btn-p">&#8595; Download MacUninstaller</a>
+    <p class="cta-m">v1.0 &bull; macOS 14.0+ &bull; ~5 MB</p>
 </section>
 
 <footer>
@@ -367,84 +245,103 @@
 
 <script>
 // Scroll reveal
-const reveals = document.querySelectorAll('.reveal');
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
-}, { threshold: 0.15 });
-reveals.forEach(el => observer.observe(el));
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('vis')})},{threshold:.12});
+document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
 
-// Battle animation on scroll
-const battle = document.querySelector('.battle');
-const laptop = document.getElementById('laptop');
-const beam = document.getElementById('beam');
-const trash = document.getElementById('trash');
-let lastFire = 0;
+// Battle animation
+const arena=document.querySelector('.arena');
+const machine=document.getElementById('machine');
+const blastCore=document.getElementById('blastCore');
+const blastRing=document.getElementById('blastRing');
+const junk=document.getElementById('junk');
+const sparksEl=document.getElementById('sparks');
+let firing=false;
 
-function createParticle(x, y) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.left = x + 'px';
-    p.style.top = y + 'px';
-    p.style.background = Math.random() > 0.5 ? '#f97316' : '#ef4444';
-    document.getElementById('particles').appendChild(p);
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 30 + Math.random() * 60;
-    const dx = Math.cos(angle) * dist;
-    const dy = Math.sin(angle) * dist;
-    p.animate([
-        { opacity: 1, transform: 'translate(0,0) scale(1)' },
-        { opacity: 0, transform: `translate(${dx}px,${dy}px) scale(0)` }
-    ], { duration: 600, easing: 'ease-out' });
-    setTimeout(() => p.remove(), 600);
+function spark(x,y){
+    const s=document.createElement('div');
+    s.style.cssText=`position:absolute;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;border-radius:50%;left:${x}px;top:${y}px;pointer-events:none`;
+    s.style.background=Math.random()>.5?'#f97316':'#ef4444';
+    sparksEl.appendChild(s);
+    const a=Math.random()*Math.PI*2,d=40+Math.random()*80;
+    s.animate([
+        {opacity:1,transform:'scale(1) translate(0,0)',boxShadow:'0 0 6px #f97316'},
+        {opacity:0,transform:`scale(0) translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px)`,boxShadow:'0 0 0 transparent'}
+    ],{duration:500+Math.random()*300,easing:'ease-out'});
+    setTimeout(()=>s.remove(),800);
 }
 
-window.addEventListener('scroll', () => {
-    const now = Date.now();
-    if (now - lastFire < 800) return;
-    const rect = battle.getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-        lastFire = now;
-        laptop.classList.add('fighting');
-        beam.classList.add('active');
-        setTimeout(() => {
-            trash.classList.add('hit');
-            const trashRect = trash.getBoundingClientRect();
-            for (let i = 0; i < 8; i++) {
-                createParticle(
-                    trashRect.left - battle.getBoundingClientRect().left + Math.random() * 100,
-                    trashRect.top - battle.getBoundingClientRect().top + Math.random() * 80
-                );
+function fire(){
+    if(firing)return;firing=true;
+    // Charge
+    machine.classList.add('charging');
+    machine.style.transform='translateX(-10px)';
+    setTimeout(()=>{
+        // Fire
+        machine.style.transform='translateX(20px)';
+        blastCore.classList.add('fire');
+        blastRing.classList.add('fire');
+        setTimeout(()=>{
+            // Impact
+            junk.classList.add('hit');
+            const r=junk.getBoundingClientRect();
+            const ar=arena.getBoundingClientRect();
+            for(let i=0;i<14;i++)spark(r.left-ar.left+Math.random()*120,r.top-ar.top+Math.random()*100);
+            // Remove a junk item
+            const items=junk.querySelectorAll('.junk-item');
+            if(items.length>0){
+                const target=items[Math.floor(Math.random()*items.length)];
+                target.animate([
+                    {opacity:1,transform:target.style.transform||'translateX(0)'},
+                    {opacity:0,transform:'translateX(100px) scale(0)',filter:'blur(4px)'}
+                ],{duration:400,easing:'ease-in'});
+                setTimeout(()=>{
+                    target.remove();
+                    // Respawn after a while
+                    setTimeout(()=>{
+                        const texts=['Old DMGs \u2014 4.2 GB','node_modules \u2014 16 GB','Stale caches \u2014 8 GB','Duplicates \u2014 3 GB','Dead apps \u2014 2.8 GB','Temp files \u2014 1.2 GB','.DS_Store \u2014 847 files'];
+                        const el=document.createElement('div');
+                        el.className='junk-item';
+                        el.textContent=texts[Math.floor(Math.random()*texts.length)];
+                        el.style.opacity='0';
+                        junk.appendChild(el);
+                        requestAnimationFrame(()=>el.style.opacity='1');
+                    },2000);
+                },400);
             }
-        }, 300);
-        setTimeout(() => {
-            laptop.classList.remove('fighting');
-            beam.classList.remove('active');
-            trash.classList.remove('hit');
-        }, 800);
-    }
-});
+        },150);
+        setTimeout(()=>{
+            blastCore.classList.remove('fire');
+            blastRing.classList.remove('fire');
+            machine.classList.remove('charging');
+            machine.style.transform='';
+            junk.classList.remove('hit');
+            firing=false;
+        },600);
+    },200);
+}
+
+// Fire on scroll
+let lastScroll=0;
+window.addEventListener('scroll',()=>{
+    const now=Date.now();
+    if(now-lastScroll<1200)return;
+    const r=arena.getBoundingClientRect();
+    if(r.top<window.innerHeight*.8&&r.bottom>0){lastScroll=now;fire();}
+},{passive:true});
+
+// Auto-fire periodically when visible
+setInterval(()=>{
+    const r=arena.getBoundingClientRect();
+    if(r.top<window.innerHeight&&r.bottom>0)fire();
+},3000);
 
 // Counter animation
-function animateCounter(el, target, suffix = '') {
-    let current = 0;
-    const step = target / 40;
-    const timer = setInterval(() => {
-        current += step;
-        if (current >= target) { current = target; clearInterval(timer); }
-        el.textContent = Math.floor(current) + suffix;
-    }, 30);
+function counter(el,target,suffix=''){
+    let c=0;const step=target/50;
+    const t=setInterval(()=>{c+=step;if(c>=target){c=target;clearInterval(t)}el.textContent=Math.floor(c)+suffix},25);
 }
-
-const statsObserver = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-        if (e.isIntersecting) {
-            animateCounter(document.getElementById('statGb'), 34, '+');
-            animateCounter(document.getElementById('statFiles'), 2847, '+');
-            statsObserver.disconnect();
-        }
-    });
-}, { threshold: 0.5 });
-statsObserver.observe(document.querySelector('.stats'));
+const sObs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){counter(document.getElementById('sGb'),34,'+');counter(document.getElementById('sFiles'),2847,'+');sObs.disconnect()}})},{threshold:.5});
+sObs.observe(document.querySelector('.stats'));
 </script>
 </body>
 </html>

@@ -27,7 +27,10 @@ targets:
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         GENERATE_INFOPLIST_FILE: false
         CODE_SIGN_ENTITLEMENTS: MacUninstaller/MacUninstaller.entitlements
-        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_IDENTITY: "Developer ID Application: KRISTOFFER LERSVEEN (4QK74D4L3J)"
+        DEVELOPMENT_TEAM: 4QK74D4L3J
+        CODE_SIGN_STYLE: Manual
+        ENABLE_HARDENED_RUNTIME: true
         SWIFT_OBJC_BRIDGING_HEADER: MacUninstaller/MacUninstaller-Bridging-Header.h
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     scheme:
