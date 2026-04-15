@@ -4,34 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MacUninstaller — Clean Your Mac</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        :root{
-            --bg:#050507;--bg2:#0b0b10;--card:#111118;--border:#1a1a25;
-            --text:#f0f0f3;--text2:#8585a0;--text3:#4a4a62;
-            --orange:#f97316;--red:#ef4444;--purple:#8b5cf6;--blue:#667eea;
-        }
+        :root{--bg:#050507;--card:#111118;--border:#1a1a25;--text:#f0f0f3;--text2:#8585a0;--text3:#4a4a62;--orange:#f97316;--red:#ef4444;--purple:#8b5cf6}
         body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
-        .fade-up{opacity:0;transform:translateY(50px);transition:all 1s cubic-bezier(.16,1,.3,1)}
+        .fade-up{opacity:0;transform:translateY(40px);transition:all .8s cubic-bezier(.16,1,.3,1)}
         .fade-up.vis{opacity:1;transform:translateY(0)}
 
-        /* Nav */
-        nav{position:fixed;top:0;width:100%;z-index:100;padding:12px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,5,7,.75);backdrop-filter:blur(30px);border-bottom:1px solid rgba(26,26,37,.5)}
+        nav{position:fixed;top:0;width:100%;z-index:100;padding:12px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,5,7,.8);backdrop-filter:blur(30px);border-bottom:1px solid rgba(26,26,37,.5)}
         .n-brand{display:flex;align-items:center;gap:10px}
         .n-logo{width:32px;height:32px;border-radius:8px;object-fit:cover}
-        .n-title{font-size:15px;font-weight:700;letter-spacing:-.3px}
+        .n-title{font-size:15px;font-weight:700}
         .n-right{display:flex;gap:20px;align-items:center}
-        .n-right a{color:var(--text2);text-decoration:none;font-size:13px;font-weight:500;transition:color .2s}
+        .n-right a{color:var(--text2);text-decoration:none;font-size:13px;transition:color .2s}
         .n-right a:hover{color:var(--text)}
         .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:all .3s}
         .btn-p{background:linear-gradient(135deg,var(--orange),var(--red));color:#fff}
         .btn-p:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(249,115,22,.35)}
         .btn-g{background:rgba(255,255,255,.04);color:var(--text);border:1px solid var(--border)}
-        .btn-g:hover{background:rgba(255,255,255,.08);border-color:var(--text3)}
+        .btn-g:hover{background:rgba(255,255,255,.08)}
 
-        /* Hero */
-        .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:140px 32px 80px}
-        .hero-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.15);color:var(--orange);margin-bottom:24px;text-transform:uppercase;letter-spacing:.5px}
+        .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:140px 32px 40px}
+        .hero-tag{display:inline-flex;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.15);color:var(--orange);margin-bottom:24px;text-transform:uppercase;letter-spacing:.5px}
         .hero h1{font-size:clamp(40px,7vw,76px);font-weight:800;line-height:1.05;letter-spacing:-3px;margin-bottom:20px}
         .hero h1 .gr{background:linear-gradient(135deg,var(--orange),var(--red),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% 200%;animation:grShift 5s ease infinite}
         @keyframes grShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
@@ -39,127 +34,46 @@
         .hero-btns{display:flex;gap:12px;margin-bottom:14px}
         .hero-meta{font-size:11px;color:var(--text3)}
 
-        /* Battle Arena */
-        .arena{padding:20px 32px 80px;position:relative}
-        .arena-inner{max-width:950px;margin:0 auto;height:380px;position:relative;display:flex;align-items:center;overflow:hidden;background:linear-gradient(180deg,transparent 60%,rgba(249,115,22,.03));border-radius:20px;border:1px solid var(--border)}
+        /* 3D Arena */
+        .arena{width:100%;position:relative;overflow:hidden}
+        .arena canvas{display:block;width:100%!important;height:auto!important}
+        .arena-overlay{position:absolute;top:20px;right:24px;text-align:right;z-index:2}
+        .arena-score{font-size:32px;font-weight:800;color:var(--orange);text-shadow:0 0 20px rgba(249,115,22,.4)}
+        .arena-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+        .arena-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--text3);z-index:2;opacity:.6}
 
-        /* Ground line */
-        .arena-inner::after{content:'';position:absolute;bottom:60px;left:5%;right:5%;height:1px;background:linear-gradient(90deg,transparent,var(--border),var(--border),transparent)}
-
-        /* Knight */
-        .knight{position:absolute;left:120px;bottom:60px;z-index:3;transition:transform .3s cubic-bezier(.16,1,.3,1)}
-        .knight-body{position:relative;width:60px;height:100px}
-        /* Helmet */
-        .knight .helm{position:absolute;top:0;left:10px;width:40px;height:36px;background:linear-gradient(135deg,#c0c0d0,#8888a0);border-radius:8px 8px 4px 4px;border:2px solid #6a6a80}
-        .knight .visor{position:absolute;top:14px;left:16px;width:28px;height:8px;background:#1a1a2a;border-radius:2px}
-        .knight .plume{position:absolute;top:-10px;left:18px;width:24px;height:14px;background:linear-gradient(135deg,var(--orange),var(--red));border-radius:12px 12px 0 0;transform-origin:bottom center}
-        /* Torso */
-        .knight .torso{position:absolute;top:36px;left:8px;width:44px;height:30px;background:linear-gradient(180deg,#9090a8,#707088);border-radius:4px;border:2px solid #6a6a80}
-        .knight .emblem{position:absolute;top:42px;left:20px;width:20px;height:16px;background:linear-gradient(135deg,var(--orange),var(--red));border-radius:3px;clip-path:polygon(50% 0%,100% 100%,0% 100%)}
-        /* Legs */
-        .knight .legs{position:absolute;top:66px;left:12px;display:flex;gap:6px}
-        .knight .leg{width:14px;height:34px;background:linear-gradient(180deg,#707088,#5a5a72);border-radius:3px;border:1px solid #5a5a72}
-
-        /* Sword arm */
-        .sword-arm{position:absolute;top:38px;right:-30px;transform-origin:0 8px;transition:transform .15s ease}
-        .sword-grip{width:8px;height:20px;background:#5a3a1a;border-radius:2px;margin-left:12px}
-        .sword-guard{width:32px;height:6px;background:linear-gradient(90deg,#c0a030,#e0c040,#c0a030);border-radius:3px;margin-left:0;margin-top:-2px}
-        .sword-blade{width:6px;height:70px;background:linear-gradient(180deg,#fff,#d0d0e0,#a0a0b8);border-radius:2px 2px 1px 1px;margin-left:13px;margin-top:-2px;box-shadow:0 0 8px rgba(255,255,255,.3)}
-
-        /* Shield */
-        .shield{position:absolute;top:40px;left:-10px;width:28px;height:36px;background:linear-gradient(135deg,#8888a0,#6a6a80);border-radius:4px 4px 4px 14px;border:2px solid #5a5a72}
-        .shield::after{content:'';position:absolute;top:8px;left:6px;width:14px;height:18px;background:linear-gradient(135deg,var(--orange),var(--red));border-radius:2px 2px 2px 8px;opacity:.8}
-
-        /* Knight animations */
-        .knight.idle{animation:knightBreathe 2s ease-in-out infinite}
-        @keyframes knightBreathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-
-        .knight.attack{animation:knightLunge .5s cubic-bezier(.16,1,.3,1)}
-        @keyframes knightLunge{
-            0%{transform:translateX(0) rotate(0)}
-            20%{transform:translateX(-20px) rotate(-5deg)}
-            50%{transform:translateX(120px) rotate(3deg)}
-            70%{transform:translateX(100px) rotate(0)}
-            100%{transform:translateX(0) rotate(0)}
-        }
-        .knight.attack .sword-arm{animation:swordSlash .5s ease}
-        @keyframes swordSlash{
-            0%{transform:rotate(0)}
-            20%{transform:rotate(-60deg)}
-            45%{transform:rotate(40deg)}
-            100%{transform:rotate(0)}
-        }
-
-        /* Slash effect */
-        .slash{position:absolute;pointer-events:none;z-index:5}
-        .slash-line{width:0;height:3px;background:linear-gradient(90deg,rgba(255,255,255,.9),var(--orange),transparent);border-radius:2px;position:absolute;transform-origin:left center;opacity:0}
-
-        /* Junk blocks */
-        .junk-zone{position:absolute;right:80px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:2;transition:all .3s}
-        .junk-block{padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;position:relative;transition:all .4s cubic-bezier(.16,1,.3,1)}
-        .junk-block:nth-child(odd){background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:var(--red);transform:translateX(10px)}
-        .junk-block:nth-child(even){background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);color:var(--orange);transform:translateX(-10px)}
-        .junk-block.hit{animation:junkExplode .5s ease-out forwards}
-        @keyframes junkExplode{
-            0%{transform:scale(1);opacity:1;filter:blur(0)}
-            30%{transform:scale(1.1);filter:brightness(2) blur(0)}
-            100%{transform:translateX(80px) scale(0) rotate(20deg);opacity:0;filter:blur(6px)}
-        }
-
-        /* Sparks */
-        .sparks{position:absolute;inset:0;pointer-events:none;z-index:6}
-        .spark{position:absolute;border-radius:50%;pointer-events:none}
-
-        /* Score counter */
-        .score{position:absolute;top:20px;right:24px;text-align:right;z-index:5}
-        .score-num{font-size:28px;font-weight:800;color:var(--orange);font-variant-numeric:tabular-nums}
-        .score-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
-
-        /* Stats */
         .stats{padding:60px 32px;display:flex;justify-content:center;gap:80px}
         .stat{text-align:center}
         .stat-n{font-size:52px;font-weight:800;background:linear-gradient(135deg,var(--orange),var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
         .stat-l{font-size:13px;color:var(--text2);margin-top:4px}
 
-        /* Features */
         .features{padding:100px 32px;max-width:1100px;margin:0 auto}
         .sh{text-align:center;margin-bottom:56px}
         .sh h2{font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-2px;margin-bottom:10px}
         .sh p{color:var(--text2);font-size:16px}
         .fg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-        .fc{padding:28px;background:var(--card);border-radius:14px;border:1px solid var(--border);transition:all .4s;position:relative;overflow:hidden}
+        .fc{padding:28px;background:var(--card);border-radius:14px;border:1px solid var(--border);transition:all .4s;overflow:hidden;position:relative}
         .fc::after{content:'';position:absolute;top:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),transparent);opacity:0;transition:opacity .4s}
         .fc:hover{border-color:rgba(249,115,22,.25);transform:translateY(-6px)}.fc:hover::after{opacity:1}
         .fi{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px}
         .fc h3{font-size:15px;font-weight:700;margin-bottom:6px}
         .fc p{font-size:13px;color:var(--text2);line-height:1.6}
 
-        /* CTA */
         .cta{padding:120px 32px;text-align:center}
         .cta h2{font-size:clamp(32px,5vw,52px);font-weight:800;letter-spacing:-2px;margin-bottom:14px}
         .cta>p{color:var(--text2);font-size:16px;margin-bottom:32px}
         .cta-m{font-size:11px;color:var(--text3);margin-top:14px}
 
-        footer{padding:24px 32px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        footer{padding:24px 32px;border-top:1px solid var(--border);display:flex;justify-content:space-between}
         footer p,footer a{font-size:11px;color:var(--text3);text-decoration:none}
 
-        @media(max-width:768px){
-            .fg{grid-template-columns:1fr}.stats{flex-direction:column;gap:28px}
-            .hero-btns{flex-direction:column;align-items:center}
-            .arena-inner{height:300px}
-            .knight{left:40px;transform:scale(.7)!important}
-            .junk-zone{right:20px}
-            .n-right a:not(.btn){display:none}
-        }
+        @media(max-width:768px){.fg{grid-template-columns:1fr}.stats{flex-direction:column;gap:28px}.hero-btns{flex-direction:column;align-items:center}}
     </style>
 </head>
 <body>
 
 <nav>
-    <div class="n-brand">
-        <img src="logo.jpg" class="n-logo" alt="MacUninstaller">
-        <span class="n-title">MacUninstaller</span>
-    </div>
+    <div class="n-brand"><img src="logo.jpg" class="n-logo" alt=""><span class="n-title">MacUninstaller</span></div>
     <div class="n-right">
         <a href="#features">Features</a>
         <a href="https://github.com/r33hAB/MacUninstaller">GitHub</a>
@@ -178,43 +92,10 @@
     <p class="hero-meta">macOS 14.0+ &bull; Universal Binary</p>
 </section>
 
-<section class="arena fade-up">
-    <div class="arena-inner">
-        <!-- Knight -->
-        <div class="knight idle" id="knight">
-            <div class="knight-body">
-                <div class="plume"></div>
-                <div class="helm"></div>
-                <div class="visor"></div>
-                <div class="torso"></div>
-                <div class="emblem"></div>
-                <div class="legs"><div class="leg"></div><div class="leg"></div></div>
-                <div class="shield"></div>
-                <div class="sword-arm">
-                    <div class="sword-grip"></div>
-                    <div class="sword-guard"></div>
-                    <div class="sword-blade"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Junk targets -->
-        <div class="junk-zone" id="junkZone">
-            <div class="junk-block">Old DMGs &mdash; 4.2 GB</div>
-            <div class="junk-block">node_modules &mdash; 16 GB</div>
-            <div class="junk-block">Stale caches &mdash; 8.1 GB</div>
-            <div class="junk-block">Duplicates &mdash; 3.4 GB</div>
-            <div class="junk-block">Dead apps &mdash; 2.8 GB</div>
-        </div>
-
-        <!-- Effects -->
-        <div class="sparks" id="sparks"></div>
-
-        <!-- Score -->
-        <div class="score">
-            <div class="score-num" id="scoreNum">0 GB</div>
-            <div class="score-label">Space Reclaimed</div>
-        </div>
+<section class="arena" id="arena">
+    <div class="arena-overlay">
+        <div class="arena-score" id="score">0 GB</div>
+        <div class="arena-label">Space Reclaimed</div>
     </div>
 </section>
 
@@ -225,41 +106,14 @@
 </div>
 
 <section class="features fade-up" id="features">
-    <div class="sh">
-        <h2>Built different.</h2>
-        <p>Not another Electron wrapper. Pure native macOS, built with SwiftUI.</p>
-    </div>
+    <div class="sh"><h2>Built different.</h2><p>Not another Electron wrapper. Pure native macOS, built with SwiftUI.</p></div>
     <div class="fg">
-        <div class="fc fade-up">
-            <div class="fi" style="background:rgba(249,115,22,.1)">&#128465;</div>
-            <h3>Deep Uninstall</h3>
-            <p>Removes apps and every trace — caches, preferences, support files, launch agents. Nothing survives.</p>
-        </div>
-        <div class="fc fade-up">
-            <div class="fi" style="background:rgba(102,126,234,.1)">&#128202;</div>
-            <h3>Storage Map</h3>
-            <p>Visual disk breakdown by category. See where your space went. Browse by folder, type, or age.</p>
-        </div>
-        <div class="fc fade-up">
-            <div class="fi" style="background:rgba(139,92,246,.1)">&#10024;</div>
-            <h3>Smart Suggestions</h3>
-            <p>Detects old installers, duplicates, stale downloads, bloated caches, and dev artifacts automatically.</p>
-        </div>
-        <div class="fc fade-up">
-            <div class="fi" style="background:rgba(34,197,94,.1)">&#128274;</div>
-            <h3>Touch ID</h3>
-            <p>Authenticate once per session. Cached authorization for admin operations. No repeated prompts.</p>
-        </div>
-        <div class="fc fade-up">
-            <div class="fi" style="background:rgba(236,72,153,.1)">&#128736;</div>
-            <h3>Dev-Aware</h3>
-            <p>Finds node_modules, DerivedData, Pods, venv, .build across all your projects. Safely reclaimable.</p>
-        </div>
-        <div class="fc fade-up">
-            <div class="fi" style="background:rgba(59,130,246,.1)">&#128270;</div>
-            <h3>Finder Menu</h3>
-            <p>Right-click any .app in Finder to uninstall. No need to open the app first.</p>
-        </div>
+        <div class="fc fade-up"><div class="fi" style="background:rgba(249,115,22,.1)">&#128465;</div><h3>Deep Uninstall</h3><p>Removes apps and every trace — caches, preferences, support files, launch agents. Nothing survives.</p></div>
+        <div class="fc fade-up"><div class="fi" style="background:rgba(102,126,234,.1)">&#128202;</div><h3>Storage Map</h3><p>Visual disk breakdown by category. See where your space went. Browse by folder, type, or age.</p></div>
+        <div class="fc fade-up"><div class="fi" style="background:rgba(139,92,246,.1)">&#10024;</div><h3>Smart Suggestions</h3><p>Detects old installers, duplicates, stale downloads, bloated caches, and dev artifacts automatically.</p></div>
+        <div class="fc fade-up"><div class="fi" style="background:rgba(34,197,94,.1)">&#128274;</div><h3>Touch ID</h3><p>Authenticate once per session. Cached authorization for admin operations. No repeated prompts.</p></div>
+        <div class="fc fade-up"><div class="fi" style="background:rgba(236,72,153,.1)">&#128736;</div><h3>Dev-Aware</h3><p>Finds node_modules, DerivedData, Pods, venv, .build across all your projects. Safely reclaimable.</p></div>
+        <div class="fc fade-up"><div class="fi" style="background:rgba(59,130,246,.1)">&#128270;</div><h3>Finder Menu</h3><p>Right-click any .app in Finder to uninstall. No need to open the app first.</p></div>
     </div>
 </section>
 
@@ -270,142 +124,307 @@
     <p class="cta-m">v1.0 &bull; macOS 14.0+ &bull; ~5 MB</p>
 </section>
 
-<footer>
-    <p>&copy; 2026 r33hab</p>
-    <a href="https://github.com/r33hAB/MacUninstaller">GitHub</a>
-</footer>
+<footer><p>&copy; 2026 r33hab</p><a href="https://github.com/r33hAB/MacUninstaller">GitHub</a></footer>
 
 <script>
 // Scroll reveal
 const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('vis')})},{threshold:.12});
 document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
 
-// Battle system
-const knight=document.getElementById('knight');
-const junkZone=document.getElementById('junkZone');
-const sparksEl=document.getElementById('sparks');
-const scoreEl=document.getElementById('scoreNum');
-const arena=document.querySelector('.arena');
-let fighting=false;
-let totalReclaimed=0;
+// ========== THREE.JS BATTLE SCENE ==========
+const container=document.getElementById('arena');
+const W=container.clientWidth,H=Math.min(480,window.innerHeight*.55);
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x050507,.008);
+const camera=new THREE.PerspectiveCamera(50,W/H,.1,200);
+camera.position.set(0,4,14);
+camera.lookAt(0,1.5,0);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setSize(W,H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.2;
+container.prepend(renderer.domElement);
 
-const junkData=[
-    {text:'Old DMGs',size:4.2},{text:'node_modules',size:16},
-    {text:'Stale caches',size:8.1},{text:'Duplicates',size:3.4},
-    {text:'Dead apps',size:2.8},{text:'Temp files',size:1.2},
-    {text:'.DS_Store spam',size:0.8},{text:'Old logs',size:2.1},
-    {text:'Xcode junk',size:9.4},{text:'Broken symlinks',size:0.3},
-    {text:'Old backups',size:5.7},{text:'Zombie prefs',size:0.6},
-];
+// Lights
+const ambient=new THREE.AmbientLight(0x222244,.4);scene.add(ambient);
+const key=new THREE.DirectionalLight(0xffeedd,1.2);
+key.position.set(5,10,8);key.castShadow=true;
+key.shadow.mapSize.set(1024,1024);key.shadow.radius=4;
+scene.add(key);
+const rim=new THREE.PointLight(0xf97316,.8,20);rim.position.set(-4,3,-2);scene.add(rim);
+const fill=new THREE.PointLight(0x667eea,.5,15);fill.position.set(3,2,5);scene.add(fill);
 
-function spark(x,y,count){
+// Ground
+const groundGeo=new THREE.PlaneGeometry(40,40);
+const groundMat=new THREE.MeshStandardMaterial({color:0x0a0a12,roughness:.9,metalness:.1});
+const ground=new THREE.Mesh(groundGeo,groundMat);
+ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+
+// Grid lines
+const gridHelper=new THREE.GridHelper(30,30,0x1a1a2a,0x0f0f18);
+gridHelper.position.y=.01;scene.add(gridHelper);
+
+// === KNIGHT ===
+const knight=new THREE.Group();
+
+// Body
+const bodyGeo=new THREE.CylinderGeometry(.35,.45,1.2,8);
+const armorMat=new THREE.MeshStandardMaterial({color:0x8888a8,roughness:.3,metalness:.7});
+const body=new THREE.Mesh(bodyGeo,armorMat);body.position.y=1.8;body.castShadow=true;
+knight.add(body);
+
+// Head/Helmet
+const helmGeo=new THREE.SphereGeometry(.35,8,6);
+const helmMat=new THREE.MeshStandardMaterial({color:0xa0a0c0,roughness:.2,metalness:.8});
+const helm=new THREE.Mesh(helmGeo,helmMat);helm.position.y=2.7;helm.scale.y=1.1;helm.castShadow=true;
+knight.add(helm);
+
+// Visor
+const visorGeo=new THREE.BoxGeometry(.4,.08,.4);
+const visorMat=new THREE.MeshStandardMaterial({color:0x111122,roughness:.1,metalness:.9});
+const visor=new THREE.Mesh(visorGeo,visorMat);visor.position.set(0,2.6,.2);
+knight.add(visor);
+
+// Plume
+const plumeGeo=new THREE.ConeGeometry(.12,.5,4);
+const plumeMat=new THREE.MeshStandardMaterial({color:0xf97316,roughness:.5,emissive:0xf97316,emissiveIntensity:.3});
+const plume=new THREE.Mesh(plumeGeo,plumeMat);plume.position.set(0,3.1,-.1);
+knight.add(plume);
+
+// Legs
+for(let i=-1;i<=1;i+=2){
+    const legGeo=new THREE.CylinderGeometry(.12,.14,.8,6);
+    const leg=new THREE.Mesh(legGeo,armorMat);
+    leg.position.set(i*.2,.6,0);leg.castShadow=true;
+    knight.add(leg);
+    const bootGeo=new THREE.BoxGeometry(.18,.15,.3);
+    const boot=new THREE.Mesh(bootGeo,armorMat);
+    boot.position.set(i*.2,.15,.05);boot.castShadow=true;
+    knight.add(boot);
+}
+
+// Shield
+const shieldGeo=new THREE.CylinderGeometry(.45,.4,.08,6);
+const shieldMat=new THREE.MeshStandardMaterial({color:0x6a6a88,roughness:.3,metalness:.6});
+const shield=new THREE.Mesh(shieldGeo,shieldMat);
+shield.rotation.z=Math.PI/2;shield.rotation.y=.3;
+shield.position.set(-.55,2,0);shield.castShadow=true;
+// Shield emblem
+const emblemGeo=new THREE.ConeGeometry(.15,.25,3);
+const emblemMat=new THREE.MeshStandardMaterial({color:0xf97316,emissive:0xf97316,emissiveIntensity:.5,roughness:.4});
+const emblem=new THREE.Mesh(emblemGeo,emblemMat);
+emblem.rotation.x=Math.PI/2;emblem.position.set(-.55,2,.06);
+knight.add(shield);knight.add(emblem);
+
+// Sword
+const swordGroup=new THREE.Group();
+const bladeGeo=new THREE.BoxGeometry(.06,2,.04);
+const bladeMat=new THREE.MeshStandardMaterial({color:0xe0e0f0,roughness:.1,metalness:.95,emissive:0xffffff,emissiveIntensity:.1});
+const blade=new THREE.Mesh(bladeGeo,bladeMat);blade.position.y=1.2;blade.castShadow=true;
+swordGroup.add(blade);
+const guardGeo=new THREE.BoxGeometry(.5,.08,.1);
+const guardMat=new THREE.MeshStandardMaterial({color:0xd4a020,roughness:.3,metalness:.8});
+const guard=new THREE.Mesh(guardGeo,guardMat);guard.position.y=.2;
+swordGroup.add(guard);
+const gripGeo=new THREE.CylinderGeometry(.04,.05,.3,6);
+const gripMat=new THREE.MeshStandardMaterial({color:0x5a3a1a,roughness:.8});
+const grip=new THREE.Mesh(gripGeo,gripMat);grip.position.y=0;
+swordGroup.add(grip);
+swordGroup.position.set(.55,2,.2);
+swordGroup.rotation.z=-.3;
+knight.add(swordGroup);
+
+knight.position.set(-4,0,0);
+scene.add(knight);
+
+// === JUNK BLOCKS ===
+const junkBlocks=[];
+const junkLabels=['DMGs','node_modules','Caches','Duplicates','Dead Apps'];
+const junkSizes=[4.2,16,8.1,3.4,2.8];
+const junkMat=new THREE.MeshStandardMaterial({color:0xef4444,roughness:.4,metalness:.3,transparent:true});
+
+function createJunkBlock(i){
+    const geo=new THREE.BoxGeometry(.8+Math.random()*.6,.8+Math.random()*.4,.8+Math.random()*.6);
+    const mat=junkMat.clone();
+    mat.color.setHex(i%2===0?0xef4444:0xf97316);
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.position.set(3+Math.random()*3,0.5+i*.9+Math.random()*.3,Math.random()*2-1);
+    mesh.rotation.y=Math.random()*Math.PI;
+    mesh.castShadow=true;
+    mesh.userData={idx:i,size:junkSizes[i%junkSizes.length],label:junkLabels[i%junkLabels.length],dead:false,vy:0,vx:0};
+    scene.add(mesh);
+    junkBlocks.push(mesh);
+}
+for(let i=0;i<5;i++)createJunkBlock(i);
+
+// === PARTICLES ===
+const particles=[];
+function emitSparks(pos,count){
     for(let i=0;i<count;i++){
-        const s=document.createElement('div');
-        s.className='spark';
-        const size=2+Math.random()*5;
-        const colors=['#f97316','#ef4444','#fbbf24','#fff'];
-        s.style.cssText=`width:${size}px;height:${size}px;left:${x}px;top:${y}px;background:${colors[Math.floor(Math.random()*colors.length)]}`;
-        sparksEl.appendChild(s);
-        const angle=Math.random()*Math.PI*2;
-        const dist=30+Math.random()*100;
-        const dur=400+Math.random()*400;
-        s.animate([
-            {opacity:1,transform:'scale(1) translate(0,0)',boxShadow:`0 0 ${size*2}px ${s.style.background}`},
-            {opacity:0,transform:`scale(0) translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px)`,boxShadow:'0 0 0 transparent'}
-        ],{duration:dur,easing:'ease-out'});
-        setTimeout(()=>s.remove(),dur);
+        const geo=new THREE.SphereGeometry(.04+Math.random()*.06);
+        const mat=new THREE.MeshBasicMaterial({color:Math.random()>.5?0xf97316:0xfbbf24});
+        const p=new THREE.Mesh(geo,mat);
+        p.position.copy(pos);
+        const dir=new THREE.Vector3(Math.random()-.5,Math.random()*.8,Math.random()-.5).normalize();
+        p.userData={vel:dir.multiplyScalar(5+Math.random()*8),life:1};
+        scene.add(p);particles.push(p);
     }
 }
 
-function slashEffect(x,y){
-    const slash=document.createElement('div');
-    slash.className='slash';
-    slash.style.cssText=`left:${x-40}px;top:${y}px`;
-    for(let i=0;i<3;i++){
-        const line=document.createElement('div');
-        line.className='slash-line';
-        line.style.transform=`rotate(${-30+i*30}deg)`;
-        slash.appendChild(line);
-        line.animate([
-            {width:'0px',opacity:1},
-            {width:'80px',opacity:.8},
-            {width:'120px',opacity:0}
-        ],{duration:250,delay:i*50,easing:'ease-out',fill:'forwards'});
+// === SLASH TRAIL ===
+function createSlash(from,to){
+    const pts=[];
+    for(let t=0;t<=1;t+=.1){
+        pts.push(new THREE.Vector3(
+            from.x+(to.x-from.x)*t+Math.sin(t*Math.PI)*.5,
+            from.y+(to.y-from.y)*t+Math.sin(t*Math.PI)*1.5,
+            from.z+(to.z-from.z)*t
+        ));
     }
-    sparksEl.appendChild(slash);
-    setTimeout(()=>slash.remove(),400);
+    const curve=new THREE.CatmullRomCurve3(pts);
+    const geo=new THREE.TubeGeometry(curve,.03,.03,20,false);
+    const mat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:1});
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.userData={life:1};
+    scene.add(mesh);
+    setTimeout(()=>{
+        const fade=()=>{
+            mesh.userData.life-=.05;
+            mat.opacity=mesh.userData.life;
+            if(mesh.userData.life>0)requestAnimationFrame(fade);
+            else{scene.remove(mesh);geo.dispose();mat.dispose();}
+        };fade();
+    },100);
 }
+
+// === BATTLE LOGIC ===
+let attacking=false,totalGB=0;
+const scoreEl=document.getElementById('score');
 
 function attack(){
-    if(fighting)return;
-    const blocks=junkZone.querySelectorAll('.junk-block:not(.hit)');
-    if(blocks.length===0)return;
-    fighting=true;
+    if(attacking)return;
+    const alive=junkBlocks.filter(b=>!b.userData.dead);
+    if(!alive.length)return;
+    attacking=true;
+    const target=alive[Math.floor(Math.random()*alive.length)];
 
-    // Pick target
-    const target=blocks[Math.floor(Math.random()*blocks.length)];
+    // Lunge forward
+    const startX=knight.position.x;
+    const targetX=target.position.x-1.5;
+    const t0=performance.now();
 
-    // Knight attacks
-    knight.classList.remove('idle');
-    knight.classList.add('attack');
-
-    // Impact timing
-    setTimeout(()=>{
-        // Slash effect at target
-        const tr=target.getBoundingClientRect();
-        const ar=arena.getBoundingClientRect();
-        slashEffect(tr.left-ar.left,tr.top-ar.top+tr.height/2);
-        spark(tr.left-ar.left+20,tr.top-ar.top+tr.height/2,12);
-
-        // Explode target
-        target.classList.add('hit');
-
-        // Update score
-        const sizeMatch=target.textContent.match(/([\d.]+)\s*GB/);
-        if(sizeMatch)totalReclaimed+=parseFloat(sizeMatch[1]);
-        scoreEl.textContent=totalReclaimed.toFixed(1)+' GB';
-        scoreEl.animate([
-            {transform:'scale(1.3)',color:'#fff'},
-            {transform:'scale(1)',color:'#f97316'}
-        ],{duration:300});
-
-        // Respawn after removal
-        setTimeout(()=>{
-            target.remove();
+    function lungeAnim(now){
+        const elapsed=(now-t0)/1000;
+        if(elapsed<.15){
+            knight.position.x=startX-1;
+            swordGroup.rotation.z=-1.2;
+        }else if(elapsed<.35){
+            const p=(elapsed-.15)/.2;
+            knight.position.x=startX-1+(targetX-startX+1)*Math.min(p*1.5,1);
+            swordGroup.rotation.z=-1.2+p*1.8;
+            if(p>.5&&!target.userData.dead){
+                // HIT
+                target.userData.dead=true;
+                target.userData.vy=3+Math.random()*3;
+                target.userData.vx=4+Math.random()*3;
+                emitSparks(target.position.clone(),20);
+                createSlash(knight.position.clone().add(new THREE.Vector3(1,2.5,0)),target.position.clone());
+                totalGB+=target.userData.size;
+                scoreEl.textContent=totalGB.toFixed(1)+' GB';
+                // Flash
+                rim.intensity=3;setTimeout(()=>rim.intensity=.8,100);
+            }
+        }else if(elapsed<.6){
+            const p=(elapsed-.35)/.25;
+            knight.position.x=targetX+(startX-targetX)*p;
+            swordGroup.rotation.z=.6-.6*p-.3;
+        }else{
+            knight.position.x=startX;
+            swordGroup.rotation.z=-.3;
+            attacking=false;
+            // Respawn dead block
             setTimeout(()=>{
-                const d=junkData[Math.floor(Math.random()*junkData.length)];
-                const el=document.createElement('div');
-                el.className='junk-block';
-                el.textContent=`${d.text} \u2014 ${d.size} GB`;
-                el.style.opacity='0';el.style.transform='translateX(40px)';
-                junkZone.appendChild(el);
-                requestAnimationFrame(()=>{el.style.opacity='1';el.style.transform='';});
-            },800);
-        },500);
-    },250);
-
-    // Reset knight
-    setTimeout(()=>{
-        knight.classList.remove('attack');
-        knight.classList.add('idle');
-        fighting=false;
-    },600);
+                junkBlocks.forEach(b=>{
+                    if(b.userData.dead&&b.material.opacity<.1){
+                        b.userData.dead=false;
+                        b.material.opacity=1;
+                        b.position.set(5+Math.random()*3,.5+Math.random()*3,Math.random()*2-1);
+                        b.rotation.y=Math.random()*Math.PI;
+                        b.userData.vy=0;b.userData.vx=0;
+                        b.scale.set(1,1,1);
+                    }
+                });
+            },1500);
+            return;
+        }
+        requestAnimationFrame(lungeAnim);
+    }
+    requestAnimationFrame(lungeAnim);
 }
 
-// Attack on scroll
-let lastScroll=0;
+// Trigger attacks
+let lastAttack=0;
 window.addEventListener('scroll',()=>{
-    const now=Date.now();
-    if(now-lastScroll<900)return;
-    const r=arena.getBoundingClientRect();
-    if(r.top<window.innerHeight*.85&&r.bottom>100){lastScroll=now;attack();}
+    const now=Date.now();if(now-lastAttack<1000)return;
+    const r=container.getBoundingClientRect();
+    if(r.top<window.innerHeight*.9&&r.bottom>0){lastAttack=now;attack();}
 },{passive:true});
-
-// Auto-attack when visible
 setInterval(()=>{
-    const r=arena.getBoundingClientRect();
+    const r=container.getBoundingClientRect();
     if(r.top<window.innerHeight&&r.bottom>0)attack();
-},2500);
+},2800);
+
+// === RENDER LOOP ===
+const clock=new THREE.Clock();
+function animate(){
+    requestAnimationFrame(animate);
+    const dt=Math.min(clock.getDelta(),.05);
+    const t=clock.getElapsedTime();
+
+    // Knight idle bob
+    if(!attacking){
+        knight.position.y=Math.sin(t*2)*.08;
+        plume.rotation.z=Math.sin(t*3)*.15;
+    }
+
+    // Dead blocks fly away
+    junkBlocks.forEach(b=>{
+        if(b.userData.dead){
+            b.userData.vy-=9.8*dt;
+            b.position.y+=b.userData.vy*dt;
+            b.position.x+=b.userData.vx*dt;
+            b.rotation.x+=dt*3;b.rotation.z+=dt*2;
+            b.material.opacity=Math.max(0,b.material.opacity-.8*dt);
+            b.scale.multiplyScalar(.98);
+        }else{
+            b.position.y=.5+b.userData.idx*.9+Math.sin(t*1.5+b.userData.idx)*.1;
+            b.rotation.y+=dt*.3;
+        }
+    });
+
+    // Particles
+    for(let i=particles.length-1;i>=0;i--){
+        const p=particles[i];
+        p.userData.life-=dt*2;
+        p.position.addScaledVector(p.userData.vel,dt);
+        p.userData.vel.y-=15*dt;
+        p.scale.setScalar(Math.max(0,p.userData.life));
+        if(p.userData.life<=0){scene.remove(p);particles.splice(i,1);}
+    }
+
+    renderer.render(scene,camera);
+}
+animate();
+
+// Resize
+window.addEventListener('resize',()=>{
+    const w=container.clientWidth;
+    camera.aspect=w/H;camera.updateProjectionMatrix();
+    renderer.setSize(w,H);
+});
 </script>
 </body>
 </html>
