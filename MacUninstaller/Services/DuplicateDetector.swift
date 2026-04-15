@@ -76,8 +76,25 @@ final class DuplicateDetector {
     }
 
     private func hashFull(of url: URL) -> Data? {
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        return sha256(data)
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+        defer { handle.closeFile() }
+
+        var context = CC_SHA256_CTX()
+        CC_SHA256_Init(&context)
+
+        let bufferSize = 65536 // 64KB chunks
+        while autoreleasepool(invoking: {
+            let data = handle.readData(ofLength: bufferSize)
+            if data.isEmpty { return false }
+            data.withUnsafeBytes {
+                _ = CC_SHA256_Update(&context, $0.baseAddress, CC_LONG(data.count))
+            }
+            return true
+        }) {}
+
+        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        CC_SHA256_Final(&hash, &context)
+        return Data(hash)
     }
 
     private func sha256(_ data: Data) -> Data {

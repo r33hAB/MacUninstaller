@@ -47,14 +47,6 @@ final class FileScanner {
         }
     }
 
-    /// Extensions that are package directories — treat as single items, don't recurse into
-    private let packageExtensions: Set<String> = [
-        "app", "framework", "xcarchive", "xcodeproj", "xcworkspace",
-        "bundle", "plugin", "kext", "prefPane", "saver",
-        "photoslibrary", "musiclibrary", "aplibrary",
-        "vmwarevm", "parallels", "vdi",
-    ]
-
     func scanCategory(_ category: StorageCategory) async -> [ScannedFile] {
         return scanTopLevelFolders(category: category)
     }
@@ -80,65 +72,6 @@ final class FileScanner {
 
                 files.append(ScannedFile(
                     path: url, size: size, dateModified: modified, dateAccessed: nil, category: category
-                ))
-            }
-        }
-        return files
-    }
-
-    /// Recursive scan with package-awareness and depth limiting.
-    /// Directories deeper than maxDepth are collapsed into single items.
-    private func scanRecursive(category: StorageCategory, maxDepth: Int = 4) -> [ScannedFile] {
-        var files: [ScannedFile] = []
-
-        for directory in category.directories {
-            guard fileManager.fileExists(atPath: directory.path) else { continue }
-            let baseDepth = directory.pathComponents.count
-
-            guard let enumerator = fileManager.enumerator(
-                at: directory,
-                includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey, .contentAccessDateKey, .isDirectoryKey],
-                options: [.skipsHiddenFiles]
-            ) else { continue }
-
-            for case let url as URL in enumerator {
-                let values = try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey, .contentAccessDateKey, .isDirectoryKey])
-                let isDir = values?.isDirectory ?? false
-                let ext = url.pathExtension.lowercased()
-                let depth = url.pathComponents.count - baseDepth
-
-                // Package directories — treat as single item
-                if isDir && packageExtensions.contains(ext) {
-                    let size = directorySize(url)
-                    let modified = values?.contentModificationDate
-                    files.append(ScannedFile(
-                        path: url, size: size, dateModified: modified, dateAccessed: nil, category: category
-                    ))
-                    enumerator.skipDescendants()
-                    continue
-                }
-
-                // Too deep — collapse this directory into a single item
-                if isDir && depth >= maxDepth {
-                    let size = directorySize(url)
-                    if size > 0 {
-                        let modified = values?.contentModificationDate
-                        files.append(ScannedFile(
-                            path: url, size: size, dateModified: modified, dateAccessed: nil, category: category
-                        ))
-                    }
-                    enumerator.skipDescendants()
-                    continue
-                }
-
-                if isDir { continue }
-
-                let size = Int64(values?.fileSize ?? 0)
-                let modified = values?.contentModificationDate
-                let accessed = values?.contentAccessDate
-
-                files.append(ScannedFile(
-                    path: url, size: size, dateModified: modified, dateAccessed: accessed, category: category
                 ))
             }
         }

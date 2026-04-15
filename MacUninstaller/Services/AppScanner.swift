@@ -8,9 +8,8 @@ final class AppScanner {
         var seen = Set<String>() // deduplicate by bundle ID
         var apps: [AppInfo] = []
 
-        // 1. Use Launch Services to find ALL registered apps on the system
-        //    This catches apps in non-standard locations (Steam, Homebrew, etc.)
-        let lsApps = scanLaunchServices(includeSystem: includeSystem)
+        // 1. Use Spotlight via NSWorkspace to find all registered apps
+        let lsApps = scanWorkspaceApps(includeSystem: includeSystem)
         for app in lsApps {
             if seen.insert(app.bundleIdentifier).inserted {
                 apps.append(app)
@@ -63,22 +62,6 @@ final class AppScanner {
         }
 
         return apps
-    }
-
-    /// Query macOS Launch Services for all registered applications
-    private func scanLaunchServices(includeSystem: Bool) -> [AppInfo] {
-        var results: [AppInfo] = []
-
-        guard let appURLs = LSCopyApplicationURLsForURL(
-            URL(string: "https://example.com")! as CFURL, .all
-        ) else {
-            // Fallback: use workspace to get all apps
-            return scanWorkspaceApps(includeSystem: includeSystem)
-        }
-
-        // Actually, LSCopyApplicationURLsForURL only gets apps for a specific URL type.
-        // Use the workspace approach which is more comprehensive.
-        return scanWorkspaceApps(includeSystem: includeSystem)
     }
 
     /// Use NSWorkspace to find all applications via Spotlight
