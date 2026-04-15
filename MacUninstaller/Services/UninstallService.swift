@@ -85,7 +85,7 @@ final class UninstallService {
         var needsEscalation: [(url: URL, size: Int64)] = []
 
         for path in paths {
-            let resolvedPath = path.path
+            let resolvedPath = path.resolvingSymlinksInPath().standardized.path
 
             let isBlocked = AppConstants.blockedPaths.contains { resolvedPath.hasPrefix($0) }
             if isBlocked {
@@ -168,10 +168,20 @@ final class UninstallService {
     /// Run rm -rf with admin privileges using the cached AuthorizationRef.
     /// Uses AuthorizationExecuteWithPrivileges (deprecated but functional).
     private func executePrivileged(authRef: AuthorizationRef, items: [(url: URL, size: Int64)]) throws {
-        let script = items.map { item in
-            let escaped = item.url.path.replacingOccurrences(of: "'", with: "'\\''")
-            return "rm -rf '\(escaped)'"
-        }.joined(separator: "; ")
+        // Validate and canonicalize all paths first
+        let validPaths = items.compactMap { item -> String? in
+            let canonical = item.url.resolvingSymlinksInPath().standardized.path
+            let isBlocked = AppConstants.blockedPaths.contains { canonical.hasPrefix($0) }
+            guard !isBlocked else { return nil }
+            guard FileManager.default.fileExists(atPath: canonical) else { return nil }
+            return canonical
+        }
+
+        guard !validPaths.isEmpty else { return }
+
+        let script = validPaths.map { path in
+            path.replacingOccurrences(of: "'", with: "'\\''")
+        }.map { "rm -rf '\($0)'" }.joined(separator: "; ")
 
         // Use C bridge to call AuthorizationExecuteWithPrivileges
         let cFlag = strdup("-c")!

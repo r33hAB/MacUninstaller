@@ -21,6 +21,8 @@ enum AppConstants {
         "/bin",
         "/sbin",
         "/Library/Apple",
+        "/private/var",
+        "/Library/LaunchDaemons",
     ]
 
     static let librarySearchPaths: [String] = [

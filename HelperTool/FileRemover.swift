@@ -9,13 +9,16 @@ final class FileRemover {
         "/bin",
         "/sbin",
         "/Library/Apple",
+        "/private/var",
+        "/Library/LaunchDaemons",
     ]
 
     func remove(paths: [String], useTrash: Bool) -> (success: Bool, error: String?) {
         var errors: [String] = []
 
         for path in paths {
-            let isBlocked = blockedPaths.contains { path.hasPrefix($0) }
+            let canonicalPath = URL(filePath: path).resolvingSymlinksInPath().standardized.path
+            let isBlocked = blockedPaths.contains { canonicalPath.hasPrefix($0) }
             if isBlocked {
                 errors.append("Blocked path: \(path)")
                 continue
