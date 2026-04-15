@@ -45,18 +45,18 @@ struct OnboardingView: View {
                 )
             } else {
                 permissionPage(
-                    icon: "folder.badge.gearshape",
-                    title: "FINDER INTEGRATION",
-                    description: "Adds \"Uninstall with MacUninstaller\" to the right-click menu on any app in Finder.",
+                    icon: "cursorarrow.click.2",
+                    title: "RIGHT-CLICK TO UNINSTALL",
+                    description: "Right-click any .app in Finder, go to Services, and select \"Uninstall with MacUninstaller\" to instantly remove it.",
                     steps: [
-                        "Click the button below to open Settings",
-                        "Find MacUninstaller under Finder Extensions",
-                        "Toggle it on"
+                        "Right-click any app in Finder",
+                        "Look under Services in the menu",
+                        "Click \"Uninstall with MacUninstaller\""
                     ],
-                    buttonTitle: "Open Extensions Settings",
+                    buttonTitle: "Got it!",
                     action: {
-                        // macOS 14+: Extensions are under General > Login Items & Extensions
-                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension")!)
+                        hasSeenOnboarding = true
+                        isPresented = false
                     }
                 )
             }

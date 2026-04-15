@@ -1,0 +1,2 @@
+PRODUCT_TYPE = com.apple.product-type.appex-finder-sync
+WRAPPER_EXTENSION = appex
