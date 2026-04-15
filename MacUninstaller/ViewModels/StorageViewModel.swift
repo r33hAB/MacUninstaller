@@ -46,6 +46,8 @@ final class StorageViewModel: ObservableObject {
     @Published var scanFileCount: Int = 0
     @Published var scanCategoryIndex: Int = 0
     @Published var scanCategoryTotal: Int = 0
+    @Published var errorMessage: String?
+    @Published var showError: Bool = false
 
     /// Which categories to include in the scan — user can toggle these
     @Published var enabledCategories: Set<StorageCategory> = Set(
@@ -53,6 +55,7 @@ final class StorageViewModel: ObservableObject {
     )
 
     @AppStorage("fullDiskScan") var fullDiskScan: Bool = false
+    @AppStorage("useTrash") var useTrash: Bool = true
 
     private let scanner = FileScanner()
     private let suggestionEngine = SuggestionEngine()
@@ -245,9 +248,13 @@ final class StorageViewModel: ObservableObject {
         cleanupMessage = "Removing \(url.lastPathComponent)..."
         let service = UninstallService()
         do {
-            let _ = try await service.uninstall(paths: [url])
+            let _ = try await service.uninstall(paths: [url], useTrash: useTrash)
         } catch {
-            print("Delete folder error: \(error)")
+            cleanupMessage = ""
+            isCleaningUp = false
+            errorMessage = error.localizedDescription
+            showError = true
+            return
         }
         cleanupMessage = "Done!"
         try? await Task.sleep(for: .seconds(1))
@@ -262,9 +269,13 @@ final class StorageViewModel: ObservableObject {
         cleanupMessage = "Removing \(paths.count) items..."
         let service = UninstallService()
         do {
-            let _ = try await service.uninstall(paths: paths)
+            let _ = try await service.uninstall(paths: paths, useTrash: useTrash)
         } catch {
-            print("Batch delete error: \(error)")
+            cleanupMessage = ""
+            isCleaningUp = false
+            errorMessage = error.localizedDescription
+            showError = true
+            return
         }
         cleanupMessage = "Done!"
         try? await Task.sleep(for: .seconds(1))
@@ -281,9 +292,13 @@ final class StorageViewModel: ObservableObject {
 
         let service = UninstallService()
         do {
-            let _ = try await service.uninstall(paths: paths)
+            let _ = try await service.uninstall(paths: paths, useTrash: useTrash)
         } catch {
-            print("Cleanup error: \(error)")
+            cleanupMessage = ""
+            isCleaningUp = false
+            errorMessage = error.localizedDescription
+            showError = true
+            return
         }
 
         cleanupMessage = "Done!"

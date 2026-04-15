@@ -18,11 +18,14 @@ enum SortOption: String, CaseIterable {
 @MainActor
 final class DashboardViewModel: ObservableObject {
     @AppStorage("riskyModeEnabled") var riskyModeEnabled: Bool = false
+    @AppStorage("useTrash") var useTrash: Bool = true
     @Published var allApps: [AppInfo] = []
     @Published var activeFilter: AppFilter = .all
     @Published var sortOption: SortOption = .size
     @Published var searchText: String = ""
-    @Published var selectedAppIDs: Set<UUID> = []
+    @Published var selectedAppIDs: Set<String> = []
+    @Published var errorMessage: String?
+    @Published var showError: Bool = false
     @Published var isLoading: Bool = false
     @Published var appToUninstall: AppInfo?
     @Published var showBatchConfirm: Bool = false
@@ -155,9 +158,15 @@ final class DashboardViewModel: ObservableObject {
         }
 
         do {
-            let _ = try await service.uninstall(paths: allPaths)
+            let _ = try await service.uninstall(paths: allPaths, useTrash: useTrash)
         } catch {
-            print("Batch uninstall error: \(error)")
+            progressTask.cancel()
+            uninstallProgress = ""
+            isUninstalling = false
+            uninstallAppNames = []
+            errorMessage = error.localizedDescription
+            showError = true
+            return
         }
 
         progressTask.cancel()

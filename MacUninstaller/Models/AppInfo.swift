@@ -6,8 +6,8 @@ enum PermissionTier: Equatable {
     case system
 }
 
-struct AppInfo: Identifiable {
-    let id = UUID()
+struct AppInfo: Identifiable, Hashable {
+    var id: String { bundlePath.path }
     let name: String
     let bundleIdentifier: String
     let bundlePath: URL
@@ -39,5 +39,13 @@ struct AppInfo: Identifiable {
         if source == .system { return .system }
         if isAdminOwned { return .adminRequired }
         return .standard
+    }
+
+    static func == (lhs: AppInfo, rhs: AppInfo) -> Bool {
+        lhs.bundlePath == rhs.bundlePath
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(bundlePath)
     }
 }

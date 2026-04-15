@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MainContentView: View {
     @State private var selectedSection: AppSection = .apps
+    @StateObject private var dashboardViewModel = DashboardViewModel()
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @State private var showOnboarding = false
 
@@ -12,7 +13,7 @@ struct MainContentView: View {
             Group {
                 switch selectedSection {
                 case .apps:
-                    DashboardView()
+                    DashboardView(viewModel: dashboardViewModel)
                 case .storage:
                     StorageOverviewView()
                 }
