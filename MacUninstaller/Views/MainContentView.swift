@@ -2,6 +2,8 @@ import SwiftUI
 
 struct MainContentView: View {
     @State private var selectedSection: AppSection = .apps
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    @State private var showOnboarding = false
 
     var body: some View {
         HStack(spacing: 0) {
@@ -16,6 +18,14 @@ struct MainContentView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .onAppear {
+            if !hasSeenOnboarding {
+                showOnboarding = true
+            }
+        }
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView(isPresented: $showOnboarding)
         }
     }
 }
