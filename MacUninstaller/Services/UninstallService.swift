@@ -67,8 +67,10 @@ final class UninstallService {
             kSecAttrAccount as String: Self.keychainAccount,
             kSecValueData as String: password.data(using: .utf8)!,
             kSecAttrAccessControl as String: access,
+            kSecUseDataProtectionKeychain as String: true,
         ]
-        SecItemAdd(addQuery as CFDictionary, nil)
+        let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+        print("Keychain save status: \(addStatus) (\(addStatus == errSecSuccess ? "SUCCESS" : "FAILED"))")
     }
 
     /// Retrieve password from Keychain using Touch ID
@@ -83,11 +85,13 @@ final class UninstallService {
             kSecReturnData as String: true,
             kSecUseAuthenticationContext as String: context,
             kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecUseDataProtectionKeychain as String: true,
         ]
 
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
 
+        print("Keychain read status: \(status) (\(status == errSecSuccess ? "SUCCESS" : "FAILED - \(status)"))")
         if status == errSecSuccess, let data = result as? Data,
            let password = String(data: data, encoding: .utf8) {
             return password
@@ -102,6 +106,7 @@ final class UninstallService {
             kSecAttrService as String: Self.keychainService,
             kSecAttrAccount as String: Self.keychainAccount,
             kSecUseAuthenticationUI as String: kSecUseAuthenticationUISkip,
+            kSecUseDataProtectionKeychain as String: true,
         ]
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
